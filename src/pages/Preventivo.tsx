@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import { Send, FileText, Video, MessageSquare, Instagram, Linkedin, Twitter, Sparkles, Zap, Building2 } from "lucide-react";
 import { useState } from "react";
+import { PaymentModal } from "@/components/PaymentModal";
+import { getPriceId, PLAN_DETAILS } from "@/lib/stripe";
 
 const formati = [
   { id: "blog", label: "Blog Post", icon: FileText },
@@ -23,6 +25,7 @@ const formati = [
 
 const piani = [
   { 
+    id: "starter",
     nome: "STARTER", 
     prezzo: "€297",
     prezzoAnnuale: "€237",
@@ -32,6 +35,7 @@ const piani = [
     dettagli: ["2 asset al mese", "15 formati output", "LinkedIn + Instagram", "Consegna 48h", "Supporto email"]
   },
   { 
+    id: "professional",
     nome: "PROFESSIONAL", 
     prezzo: "€497",
     prezzoAnnuale: "€397",
@@ -41,6 +45,7 @@ const piani = [
     dettagli: ["4 asset al mese", "30 formati output", "LinkedIn + Instagram + X + Newsletter", "Consegna 24h", "Supporto WhatsApp", "1 call strategica/mese", "Analytics report"]
   },
   { 
+    id: "business",
     nome: "BUSINESS", 
     prezzo: "€997",
     prezzoAnnuale: "€797",
@@ -54,6 +59,18 @@ const piani = [
 export default function Preventivo() {
   const [inviaEmail, setInviaEmail] = useState(false);
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<typeof piani[0] | null>(null);
+
+  const handleSelectPlan = (piano: typeof piani[0]) => {
+    setSelectedPlan(piano);
+    setPaymentModalOpen(true);
+  };
+
+  const getPlanAmount = (piano: typeof piani[0]) => {
+    const planId = piano.id as 'starter' | 'professional' | 'business';
+    return PLAN_DETAILS[planId][billingCycle];
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -177,17 +194,13 @@ export default function Preventivo() {
                   ))}
                 </ul>
 
-                <a 
-                  href={`mailto:consciuslabs@gmail.com?subject=Richiesta%20${piano.nome}%20${billingCycle === "annual" ? "Annuale" : "Mensile"}&body=Ciao%2C%0A%0ASono%20interessato%20al%20piano%20${piano.nome}%20(${billingCycle === "annual" ? "annuale" : "mensile"}).%0A%0AContattatemi%20per%20procedere.%0A%0AGrazie`}
-                  className="block w-full"
+                <Button 
+                  variant={piano.popular ? "hero" : "outline"} 
+                  className="w-full"
+                  onClick={() => handleSelectPlan(piano)}
                 >
-                  <Button 
-                    variant={piano.popular ? "hero" : "outline"} 
-                    className="w-full"
-                  >
-                    {piano.popular ? "Scegli Professional" : "Seleziona"}
-                  </Button>
-                </a>
+                  {piano.popular ? "Scegli Professional" : "Seleziona"}
+                </Button>
               </motion.div>
             ))}
           </div>
@@ -335,6 +348,18 @@ export default function Preventivo() {
       </motion.div>
 
       <Footer />
+
+      {/* Payment Modal */}
+      {selectedPlan && (
+        <PaymentModal
+          isOpen={paymentModalOpen}
+          onClose={() => setPaymentModalOpen(false)}
+          planId={getPriceId(selectedPlan)}
+          planName={selectedPlan.nome}
+          amount={getPlanAmount(selectedPlan)}
+          billingCycle={billingCycle}
+        />
+      )}
     </div>
   );
 }
