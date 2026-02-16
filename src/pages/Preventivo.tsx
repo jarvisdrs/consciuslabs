@@ -354,7 +354,11 @@ export default function Preventivo() {
         <PaymentModal
           isOpen={paymentModalOpen}
           onClose={() => setPaymentModalOpen(false)}
-          planId={getPriceId(selectedPlan.id as 'starter' | 'professional' | 'business', billingCycle)}
+          planId={(() => {
+            const priceId = getPriceId(selectedPlan.id as 'starter' | 'professional' | 'business', billingCycle);
+            console.log('Price ID:', priceId);
+            return priceId;
+          })()}
           planName={selectedPlan.nome}
           amount={getPlanAmount(selectedPlan)}
           billingCycle={billingCycle}
