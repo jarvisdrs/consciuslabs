@@ -37,7 +37,7 @@ export function CheckoutForm({
   planName, 
   amount, 
   billingCycle,
-  couponCode,
+  couponCode: initialCouponCode,
   onSuccess 
 }: CheckoutFormProps) {
   const stripe = useStripe();
@@ -47,7 +47,7 @@ export function CheckoutForm({
   const [error, setError] = useState('');
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
-  const [couponCode, setCouponCode] = useState('');
+  const [couponCode, setCouponCode] = useState(initialCouponCode || '');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
