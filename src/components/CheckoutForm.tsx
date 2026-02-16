@@ -29,6 +29,7 @@ const CARD_ELEMENT_OPTIONS = {
       color: '#9e2146',
     },
   },
+  hidePostalCode: false, // Mostra campo CAP
 };
 
 export function CheckoutForm({ 
