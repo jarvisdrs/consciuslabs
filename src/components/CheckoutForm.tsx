@@ -47,6 +47,7 @@ export function CheckoutForm({
   const [error, setError] = useState('');
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
+  const [couponCode, setCouponCode] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -157,6 +158,21 @@ export function CheckoutForm({
               placeholder="Mario Rossi"
               required
             />
+          </div>
+
+          {/* Codice Sconto */}
+          <div className="space-y-2">
+            <Label htmlFor="coupon">Codice sconto (opzionale)</Label>
+            <Input
+              id="coupon"
+              type="text"
+              value={couponCode}
+              onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+              placeholder="FOUNDERS50"
+            />
+            <p className="text-xs text-accent">
+              🚀 Programma Founders: usa FOUNDERS50 per il 50% di sconto sul primo mese!
+            </p>
           </div>
 
           {/* Card Element */}
