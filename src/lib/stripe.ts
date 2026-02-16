@@ -14,16 +14,16 @@ export const getStripe = () => {
 // Price IDs da configurare in Stripe Dashboard
 export const STRIPE_PRICES = {
   starter: {
-    monthly: 'price_starter_monthly',    // €297
-    annual: 'price_starter_annual',      // €237
+    monthly: 'price_1T1X4QD5yldKuDg6jLqeCOjg',    // €297
+    annual: 'price_1T1a2wD5yldKuDg65lFIQvsP',      // €237
   },
   professional: {
-    monthly: 'price_pro_monthly',        // €497
-    annual: 'price_pro_annual',          // €397
+    monthly: 'price_1T1X4xD5yldKuDg6Csy0vbMf',        // €497
+    annual: 'price_1T1a2WD5yldKuDg6kBaVPHUu',          // €397
   },
   business: {
-    monthly: 'price_business_monthly',   // €997
-    annual: 'price_business_annual',     // €797
+    monthly: 'price_1T1X5LD5yldKuDg6qvGVFBD5',   // €997
+    annual: 'price_1T1a2DD5yldKuDg60eDNa5oO',     // €797
   },
 };
 
