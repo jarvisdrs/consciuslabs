@@ -23,7 +23,14 @@ export function Footer() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-10 mb-12">
           {/* Brand */}
           <div className="lg:col-span-2">
-            <span className="text-xl font-bold font-display text-gradient">ConsciusLabs</span>
+            <div className="flex items-center gap-2">
+              <img 
+                src="/logo.png" 
+                alt="ConsciusLabs Logo" 
+                className="h-8 w-auto"
+              />
+              <span className="text-xl font-bold font-display text-gradient">ConsciusLabs</span>
+            </div>
             <p className="text-sm text-muted-foreground mt-3 max-w-xs leading-relaxed">
               L'AI Content Factory che trasforma le tue idee in una molteplicità di contenuti ottimizzati.
             </p>

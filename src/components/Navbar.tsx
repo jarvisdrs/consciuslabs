@@ -27,10 +27,15 @@ export function Navbar() {
       <div className="container flex items-center justify-between h-16 px-4 mx-auto">
         <Link 
           to="/" 
-          className="text-xl font-bold font-display text-gradient"
+          className="flex items-center gap-2"
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
         >
-          ConsciusLabs
+          <img 
+            src="/logo.png" 
+            alt="ConsciusLabs Logo" 
+            className="h-8 w-auto"
+          />
+          <span className="text-xl font-bold font-display text-gradient">ConsciusLabs</span>
         </Link>
 
         {/* Desktop */}
