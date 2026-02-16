@@ -59,7 +59,8 @@ export function CheckoutForm({
 
     try {
       // 1. Crea subscription nel backend
-      const response = await fetch('/api/create-subscription', {
+      const API_URL = 'https://consciuslabs-api.vercel.app';
+      const response = await fetch(`${API_URL}/api/create-subscription`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
