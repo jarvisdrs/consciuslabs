@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 const contentTypes = [
   "📝 Blog Post", "🎬 Reel", "📧 Newsletter", "🐦 Tweet", "📊 Infografica",
@@ -60,9 +60,11 @@ export function HeroSection() {
               Scopri Come Funziona
               <ArrowRight className="ml-2" size={18} />
             </Button>
-            <Button variant="hero-outline" size="lg" onClick={() => scrollTo("contatti")}>
-              <Play size={18} className="mr-2" />
-              Richiedi Demo
+            <Button variant="hero-outline" size="lg" asChild>
+              <a href="/preventivo">
+                <ArrowRight size={18} className="mr-2" />
+                Richiedi un Preventivo
+              </a>
             </Button>
           </motion.div>
         </div>

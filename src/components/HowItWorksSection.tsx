@@ -45,9 +45,7 @@ export function HowItWorksSection() {
           </h2>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto relative">
-          {/* Connection line */}
-          <div className="hidden md:block absolute top-24 left-[20%] right-[20%] h-px bg-gradient-to-r from-primary/40 via-accent/40 to-primary/40" />
+        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
 
           {steps.map((step, i) => (
             <motion.div

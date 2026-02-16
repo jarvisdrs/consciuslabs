@@ -1,17 +1,16 @@
 import { useState } from "react";
-import { Linkedin, Twitter, Instagram, Youtube, Send } from "lucide-react";
+import { Linkedin, Twitter, Instagram, Send } from "lucide-react";
 
 const links = {
-  Azienda: ["Chi Siamo", "Blog", "Carriere"],
   Servizi: ["Content Multiplication", "Workflow Automation", "Multi-Platform", "Brand Consistency"],
+  "Chi Siamo": ["Il Team", "La Mission", "Blog", "Carriere"],
   Supporto: ["Contatti", "Pricing", "FAQ"],
 };
 
 const socials = [
-  { icon: Linkedin, href: "#" },
-  { icon: Twitter, href: "#" },
-  { icon: Instagram, href: "#" },
-  { icon: Youtube, href: "#" },
+  { icon: Linkedin, href: "#", label: "LinkedIn" },
+  { icon: Twitter, href: "https://x.com/ConsciusLabs", label: "X" },
+  { icon: Instagram, href: "https://www.instagram.com/consciuslabs/", label: "Instagram" },
 ];
 
 export function Footer() {
@@ -28,11 +27,17 @@ export function Footer() {
             <p className="text-sm text-muted-foreground mt-3 max-w-xs leading-relaxed">
               L'AI Content Factory che trasforma le tue idee in una molteplicità di contenuti ottimizzati.
             </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Email: <a href="mailto:consciuslabs@gmail.com" className="hover:text-foreground transition-colors">consciuslabs@gmail.com</a>
+            </p>
             <div className="flex gap-3 mt-5">
-              {socials.map(({ icon: Icon, href }, i) => (
+              {socials.map(({ icon: Icon, href, label }, i) => (
                 <a
                   key={i}
                   href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
                   className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-primary/20 transition-colors"
                 >
                   <Icon size={16} />
