@@ -3,7 +3,7 @@ import { Linkedin, Twitter, Instagram, Send } from "lucide-react";
 
 const links = {
   Servizi: ["Content Multiplication", "Workflow Automation", "Multi-Platform", "Brand Consistency"],
-  "Chi Siamo": ["Il Team", "La Mission", "Blog", "Carriere"],
+  "Chi Siamo": ["Il Team", "La Mission"],
   Supporto: ["Contatti", "Pricing", "FAQ"],
 };
 
