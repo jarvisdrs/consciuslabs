@@ -32,7 +32,7 @@ export function Footer() {
               <span className="text-xl font-bold font-display text-gradient">ConsciusLabs</span>
             </div>
             <p className="text-sm text-muted-foreground mt-3 max-w-xs leading-relaxed">
-              L'AI Content Laboratory che trasforma le tue idee in una molteplicità di contenuti ottimizzati.
+              L'AI Content Lab che trasforma i tuoi video in decine di contenuti ottimizzati.
             </p>
             <p className="text-sm text-muted-foreground mt-2">
               Email: <a href="mailto:consciuslabs@gmail.com" className="hover:text-foreground transition-colors">consciuslabs@gmail.com</a>

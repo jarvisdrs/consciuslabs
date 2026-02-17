@@ -27,7 +27,7 @@ export function HeroSection() {
             transition={{ duration: 0.7 }}
           >
             <span className="inline-block px-4 py-1.5 mb-6 text-xs font-medium rounded-full bg-primary/10 text-primary border border-primary/20">
-              AI Content Laboratory
+              AI Content Lab
             </span>
           </motion.div>
 
@@ -37,7 +37,7 @@ export function HeroSection() {
             transition={{ duration: 0.7, delay: 0.1 }}
             className="text-4xl sm:text-5xl lg:text-7xl font-bold font-display leading-tight mb-6"
           >
-            L'AI Content Laboratory che{" "}
+            L'AI Content Lab che{" "}
             <span className="text-gradient">Amplifica le Tue Idee</span>
           </motion.h1>
 

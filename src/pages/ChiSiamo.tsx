@@ -2,7 +2,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
-import { Target, Heart, Lightbulb, Users, Sparkles, ArrowRight } from "lucide-react";
+import { Target, Heart, Lightbulb, Users, Sparkles, ArrowRight, Linkedin, Twitter } from "lucide-react";
 
 const values = [
   {
@@ -32,6 +32,25 @@ const stats = [
   { number: "24h", label: "Tempo di Consegna" },
   { number: "100%", label: "Clienti Soddisfatti" },
   { number: "∞", label: "Possibilità Creative" }
+];
+
+const team = [
+  {
+    nome: "Simone Santus",
+    ruolo: "Founder & CEO",
+    bio: "Appassionato di marketing digitale e automazione. Dopo anni a gestire contenuti per brand e creator, ha fondato ConsciusLabs per risolvere il problema del tempo sprecato nella creazione di contenuti.",
+    linkedin: "#",
+    twitter: "#",
+    iniziali: "SS"
+  },
+  {
+    nome: "Alberto Usai",
+    ruolo: "Co-Founder & Head of Content",
+    bio: "Copywriter e content strategist con esperienza in agenzia. Specialista nel repurposing di contenuti long-form in asset multi-piattaforma. Gestisce la qualità e la coerenza di ogni progetto.",
+    linkedin: "#",
+    twitter: "#",
+    iniziali: "AU"
+  }
 ];
 
 export default function ChiSiamo() {
@@ -83,6 +102,44 @@ export default function ChiSiamo() {
                 </p>
               </CardContent>
             </Card>
+          </div>
+
+          {/* Team Section */}
+          <div className="mb-16">
+            <h2 className="text-3xl font-bold font-display text-center mb-12">Il Team</h2>
+            <div className="grid md:grid-cols-2 gap-6">
+              {team.map((member, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <Card className="h-full">
+                    <CardContent className="p-6">
+                      <div className="flex items-start gap-4">
+                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-xl font-bold">
+                          {member.iniziali}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold font-display">{member.nome}</h3>
+                          <p className="text-sm text-accent mb-2">{member.ruolo}</p>
+                          <p className="text-sm text-muted-foreground mb-4">{member.bio}</p>
+                          <div className="flex gap-3">
+                            <a href={member.linkedin} className="text-muted-foreground hover:text-primary transition-colors">
+                              <Linkedin size={18} />
+                            </a>
+                            <a href={member.twitter} className="text-muted-foreground hover:text-primary transition-colors">
+                              <Twitter size={18} />
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
           </div>
 
           <div className="mb-16">

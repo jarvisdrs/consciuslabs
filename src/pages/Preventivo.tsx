@@ -1,15 +1,9 @@
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
-import { Send, FileText, Video, MessageSquare, Instagram, Linkedin, Twitter, Sparkles, Zap, Building2 } from "lucide-react";
+import { FileText, Video, MessageSquare, Instagram, Linkedin, Twitter, Sparkles, Zap, Building2, ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { PaymentModal } from "@/components/PaymentModal";
 import { getPriceId, PLAN_DETAILS } from "@/lib/stripe";
@@ -29,30 +23,30 @@ const piani = [
     nome: "STARTER", 
     prezzo: "€297",
     prezzoAnnuale: "€237",
-    descrizione: "2 asset → 15 formati",
+    descrizione: "2 video → 15 contenuti",
     target: "Freelancer, test",
     popular: false,
-    dettagli: ["2 asset al mese", "15 formati output", "LinkedIn + Instagram", "Consegna 48h", "Supporto email"]
+    dettagli: ["2 video al mese", "15 contenuti output", "LinkedIn + Instagram", "Consegna 48h", "Supporto email"]
   },
   { 
     id: "professional",
     nome: "PROFESSIONAL", 
     prezzo: "€497",
     prezzoAnnuale: "€397",
-    descrizione: "4 asset → 30 formati",
+    descrizione: "4 video → 30 contenuti",
     target: "Coach, creator B2B",
     popular: true,
-    dettagli: ["4 asset al mese", "30 formati output", "LinkedIn + Instagram + X + Newsletter", "Consegna 24h", "Supporto WhatsApp", "1 call strategica/mese", "Analytics report"]
+    dettagli: ["4 video al mese", "30 contenuti output", "LinkedIn + Instagram + X + Newsletter", "Consegna 24h", "Supporto WhatsApp", "1 call strategica/mese", "Analytics report"]
   },
   { 
     id: "business",
     nome: "BUSINESS", 
     prezzo: "€997",
     prezzoAnnuale: "€797",
-    descrizione: "8 asset → 50+ formati",
+    descrizione: "8 video → 50+ contenuti",
     target: "Agenzie, team",
     popular: false,
-    dettagli: ["8 asset al mese", "50+ formati output", "Tutte le piattaforme + YouTube Shorts", "Consegna 24h garantita", "Supporto prioritario", "2 call strategiche/mese", "Content calendar planning"]
+    dettagli: ["8 video al mese", "50+ contenuti output", "Tutte le piattaforme + YouTube Shorts", "Consegna 24h garantita", "Supporto prioritario", "2 call strategiche/mese", "Content calendar planning"]
   },
 ];
 
@@ -201,6 +195,18 @@ export default function Preventivo() {
                 >
                   {piano.popular ? "Scegli Professional" : "Seleziona"}
                 </Button>
+                
+                <p className="text-xs text-center text-muted-foreground mt-3">
+                  Preferisci parlare prima?{" "}
+                  <a 
+                    href="https://calendly.com/consciuslabs/intro" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-accent hover:underline"
+                  >
+                    Prenota call gratuita
+                  </a>
+                </p>
               </motion.div>
             ))}
           </div>
@@ -236,114 +242,35 @@ export default function Preventivo() {
             </motion.div>
           )}
 
-          {/* Form Contatto */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Richiedi Informazioni</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form className="space-y-6" action="mailto:consciuslabs@gmail.com" method="post" encType="text/plain">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="nome">Nome e Cognome *</Label>
-                    <Input id="nome" name="nome" placeholder="Mario Rossi" required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email *</Label>
-                    <Input id="email" name="email" type="email" placeholder="mario@azienda.it" required />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="azienda">Azienda / Brand</Label>
-                  <Input id="azienda" name="azienda" placeholder="Nome della tua azienda" />
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="piano">Piano di interesse *</Label>
-                    <Select name="piano" required>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleziona un piano" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="starter">Starter — €297/mese</SelectItem>
-                        <SelectItem value="professional">Professional — €497/mese ⭐</SelectItem>
-                        <SelectItem value="business">Business — €997/mese</SelectItem>
-                        <SelectItem value="custom">Personalizzato</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="fatturazione">Fatturazione</Label>
-                    <Select name="fatturazione" defaultValue="mensile">
-                      <SelectTrigger>
-                        <SelectValue placeholder="Mensile o Annuale" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="mensile">Mensile</SelectItem>
-                        <SelectItem value="annuale">Annuale (-20%)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Formati di output desiderati</Label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {formati.map((formato) => (
-                      <div key={formato.id} className="flex items-center space-x-2">
-                        <Checkbox id={formato.id} name="formati" value={formato.label} />
-                        <Label htmlFor={formato.id} className="text-sm font-normal cursor-pointer flex items-center gap-2">
-                          <formato.icon size={16} className="text-muted-foreground" />
-                          {formato.label}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="descrizione">Descrivi il tuo progetto *</Label>
-                  <Textarea 
-                    id="descrizione" 
-                    name="descrizione" 
-                    placeholder="Descrivi il tipo di contenuto che produci, i tuoi obiettivi, la frequenza di pubblicazione..."
-                    rows={5}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="url">Link contenuto di esempio (opzionale)</Label>
-                  <Input id="url" name="url" type="url" placeholder="https://youtube.com/... o https://drive.google.com/..." />
-                  <p className="text-xs text-muted-foreground">
-                    Se hai già un video, podcast o articolo da cui partire, inserisci il link
-                  </p>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="founders" 
-                    name="founders"
-                    value="interessato"
-                  />
-                  <Label htmlFor="founders" className="text-sm font-normal">
-                    Sono interessato allo sconto Founders (50% OFF primo mese)
-                  </Label>
-                </div>
-
-                <Button type="submit" className="w-full" size="lg">
-                  <Send className="mr-2" size={18} />
-                  Invia Richiesta
-                </Button>
-
-                <p className="text-xs text-muted-foreground text-center">
-                  Ti risponderemo entro 24 ore con tutti i dettagli.
-                </p>
-              </form>
-            </CardContent>
-          </Card>
+          {/* CTA Finale - Solo Call */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center p-8 rounded-2xl bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 border border-primary/20"
+          >
+            <Sparkles className="w-12 h-12 text-accent mx-auto mb-4" />
+            <h3 className="text-2xl font-bold font-display mb-3">
+              Non sei sicuro di quale piano scegliere?
+            </h3>
+            <p className="text-muted-foreground mb-6 max-w-lg mx-auto">
+              Prenota una call gratuita di 15 minuti. Ti aiutiamo a capire quale piano 
+              è più adatto alle tue esigenze, senza impegno.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <a
+                href="https://calendly.com/consciuslabs/intro"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gradient-primary text-primary-foreground font-semibold hover:opacity-90 transition"
+              >
+                Prenota Call Gratuita
+                <ArrowRight size={18} />
+              </a>
+              <span className="text-sm text-muted-foreground flex items-center justify-center">
+                oppure scrivi a consciuslabs@gmail.com
+              </span>
+            </div>
+          </motion.div>
         </div>
       </motion.div>
 
