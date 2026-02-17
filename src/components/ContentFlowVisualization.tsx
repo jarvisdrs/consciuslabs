@@ -83,11 +83,14 @@ export function ContentFlowVisualization() {
       timeRef.current += 0.008;
       const time = timeRef.current;
 
-      // WIDER layout - more spread out
+      // Layout
       const startX = isMobile ? width * 0.12 : width * 0.08;
       const startY = height / 2;
-      const spreadStart = isMobile ? width * 0.35 : width * 0.28;
       const endX = isMobile ? width * 0.88 : width * 0.92;
+      
+      // Icon sizes for positioning calculation
+      const videoRadius = isMobile ? 28 : 26; // VIDEO node slightly larger
+      const outputRadius = isMobile ? 18 : 16; // Output nodes
 
       // Calculate node positions
       const nodePositions = outputNodes.map((_, i) => {
@@ -96,51 +99,44 @@ export function ContentFlowVisualization() {
         const topMargin = height * 0.09;
         const spacing = availableHeight / (total - 1);
         const y = topMargin + i * spacing;
-        return { x: endX, y };
+        return { x: endX, y, radius: outputRadius };
       });
 
-      // Draw energy flow channels (funnel style with SOFT curves)
+      // Draw energy flow channels with connection to nodes
       outputNodes.forEach((node, i) => {
         const endPos = nodePositions[i];
         const color = node.color;
 
-        // Create funnel path with SOFT bezier curves (not sharp elbows)
         ctx.beginPath();
         
-        const narrowWidth = isMobile ? 2.5 : 3.5;
-        const spreadWidth = isMobile ? 2 : 3;
+        const narrowWidth = isMobile ? 3 : 4;
+        const spreadWidth = isMobile ? 2.5 : 3.5;
         
         if (isMobile) {
-          // Mobile: soft curves spreading from top
           const midY = (startY + endPos.y) / 2;
           
           ctx.moveTo(startX - narrowWidth, startY);
-          // Soft curve spreading to target
           ctx.bezierCurveTo(
             startX - narrowWidth * 2, midY,
-            endPos.x - spreadStart * 0.5, endPos.y - spreadWidth * 2,
-            endPos.x - 16, endPos.y - spreadWidth
+            endPos.x - endPos.radius * 2, endPos.y - spreadWidth * 2,
+            endPos.x - endPos.radius - 2, endPos.y - spreadWidth
           );
-          ctx.lineTo(endPos.x - 16, endPos.y + spreadWidth);
+          ctx.lineTo(endPos.x - endPos.radius - 2, endPos.y + spreadWidth);
           ctx.bezierCurveTo(
-            endPos.x - spreadStart * 0.5, endPos.y + spreadWidth * 2,
+            endPos.x - endPos.radius * 2, endPos.y + spreadWidth * 2,
             startX + narrowWidth * 2, midY,
             startX + narrowWidth, startY
           );
         } else {
-          // Desktop: wide funnel with soft bezier curves (energy flow style)
           const midX = (startX + endPos.x) / 2;
           
-          // Top edge - flowing curve from center to target
           ctx.moveTo(startX, startY - narrowWidth);
           ctx.bezierCurveTo(
             midX - 50, startY - narrowWidth * 0.5,
             midX + 30, endPos.y - spreadWidth * 2,
-            endPos.x - 18, endPos.y - spreadWidth
+            endPos.x - endPos.radius - 4, endPos.y - spreadWidth
           );
-          
-          // Bottom edge back
-          ctx.lineTo(endPos.x - 18, endPos.y + spreadWidth);
+          ctx.lineTo(endPos.x - endPos.radius - 4, endPos.y + spreadWidth);
           ctx.bezierCurveTo(
             midX + 30, endPos.y + spreadWidth * 2,
             midX - 50, startY + narrowWidth * 0.5,
@@ -150,7 +146,7 @@ export function ContentFlowVisualization() {
         
         ctx.closePath();
 
-        // Flowing gradient for energy effect
+        // Flowing gradient
         const gradient = ctx.createLinearGradient(startX, startY, endPos.x, endPos.y);
         const offset = (time + i * 0.1) % 1;
         const glowWidth = 0.15;
@@ -164,53 +160,62 @@ export function ContentFlowVisualization() {
         ctx.fillStyle = gradient;
         ctx.fill();
 
-        // Soft outline glow
+        // Outline glow
         ctx.strokeStyle = color;
         ctx.lineWidth = 0.5;
         ctx.globalAlpha = 0.35;
         ctx.stroke();
         ctx.globalAlpha = 1;
 
-        // Connector to icon
+        // Strong connector line right to the icon edge
         ctx.beginPath();
         ctx.strokeStyle = color;
-        ctx.lineWidth = 2;
-        ctx.globalAlpha = 0.8;
-        ctx.moveTo(endPos.x - 18, endPos.y);
-        ctx.lineTo(endPos.x - 10, endPos.y);
+        ctx.lineWidth = 2.5;
+        ctx.globalAlpha = 0.9;
+        // Start from flow channel edge
+        const flowEndX = endPos.x - endPos.radius - 4;
+        ctx.moveTo(flowEndX, endPos.y);
+        // Connect directly to icon edge
+        ctx.lineTo(endPos.x - endPos.radius + 1, endPos.y);
         ctx.stroke();
         ctx.globalAlpha = 1;
+        
+        // Connector dot at icon edge
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(endPos.x - endPos.radius + 1, endPos.y, 3, 0, Math.PI * 2);
+        ctx.fill();
       });
 
-      // VIDEO source node
-      const pulseRadius = 28 + Math.sin(time * 2) * 2;
+      // VIDEO source node - LARGER than output nodes
+      const pulseRadius = videoRadius + 4 + Math.sin(time * 2) * 2;
       
       ctx.globalAlpha = 0.25;
-      const glowGradient = ctx.createRadialGradient(startX, startY, 0, startX, startY, pulseRadius + 10);
+      const glowGradient = ctx.createRadialGradient(startX, startY, 0, startX, startY, pulseRadius + 8);
       glowGradient.addColorStop(0, '#8B5CF6');
       glowGradient.addColorStop(1, 'transparent');
       ctx.fillStyle = glowGradient;
       ctx.beginPath();
-      ctx.arc(startX, startY, pulseRadius + 10, 0, Math.PI * 2);
+      ctx.arc(startX, startY, pulseRadius + 8, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.globalAlpha = 1;
       ctx.fillStyle = 'hsl(220 20% 6%)';
       ctx.beginPath();
-      ctx.arc(startX, startY, 22, 0, Math.PI * 2);
+      ctx.arc(startX, startY, videoRadius, 0, Math.PI * 2);
       ctx.fill();
       
       ctx.strokeStyle = '#8B5CF6';
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 2.5;
       ctx.stroke();
 
-      ctx.fillStyle = '#8B5CF640';
+      ctx.fillStyle = '#8B5CF650';
       ctx.beginPath();
-      ctx.arc(startX, startY, 15, 0, Math.PI * 2);
+      ctx.arc(startX, startY, videoRadius - 6, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = '#F5F0EB';
-      ctx.font = "600 10px 'Space Grotesk', sans-serif";
+      ctx.font = "600 11px 'Space Grotesk', sans-serif";
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('VIDEO', startX, startY);
@@ -242,7 +247,7 @@ export function ContentFlowVisualization() {
           className="absolute inset-0 w-full h-full block"
         />
 
-        {/* Output nodes */}
+        {/* Output nodes - LARGER icons */}
         {outputNodes.map((node, i) => {
           const Icon = node.icon;
           const total = outputNodes.length;
@@ -256,7 +261,7 @@ export function ContentFlowVisualization() {
               key={node.id}
               className="absolute flex items-center gap-2"
               style={{ 
-                right: isMobile ? '5%' : '4%',
+                right: isMobile ? '4%' : '3%',
                 top: `${top}px`,
                 transform: 'translateY(-50%)',
               }}
@@ -264,15 +269,16 @@ export function ContentFlowVisualization() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.4, delay: 0.9 + i * 0.03 }}
             >
+              {/* Larger icon container - w-9 h-9 instead of w-7 h-7 */}
               <div 
-                className="flex items-center justify-center w-7 h-7 rounded-full flex-shrink-0"
+                className="flex items-center justify-center w-9 h-9 rounded-full flex-shrink-0"
                 style={{ 
                   backgroundColor: 'hsl(220 18% 10%)',
-                  border: `1.5px solid ${node.color}`,
-                  boxShadow: `0 0 12px ${node.color}50`,
+                  border: `2px solid ${node.color}`,
+                  boxShadow: `0 0 15px ${node.color}60`,
                 }}
               >
-                <Icon size={13} color={node.color} strokeWidth={1.5} />
+                <Icon size={18} color={node.color} strokeWidth={1.5} />
               </div>
               <span 
                 className="text-xs font-medium whitespace-nowrap"
