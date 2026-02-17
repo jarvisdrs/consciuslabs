@@ -1,11 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
-
-const contentTypes = [
-  "📝 Blog Post", "🎬 Reel", "📧 Newsletter", "🐦 Tweet", "📊 Infografica",
-  "🎙️ Podcast Clip", "📱 Story", "💼 LinkedIn Post", "📰 Articolo", "🎯 Ad Copy",
-];
+import { ContentFlowVisualization } from "./ContentFlowVisualization";
 
 export function HeroSection() {
   const scrollTo = (id: string) => {
@@ -69,28 +65,8 @@ export function HeroSection() {
           </motion.div>
         </div>
 
-        {/* Floating content tags */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1, delay: 0.6 }}
-          className="mt-20 relative h-20"
-        >
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            {contentTypes.map((type, i) => (
-              <motion.span
-                key={type}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.4, delay: 0.7 + i * 0.08 }}
-                className="px-3 py-1.5 text-xs rounded-full bg-secondary border border-border text-muted-foreground animate-float"
-                style={{ animationDelay: `${i * 0.4}s` }}
-              >
-                {type}
-              </motion.span>
-            ))}
-          </div>
-        </motion.div>
+        {/* Content Flow Visualization */}
+        <ContentFlowVisualization />
       </div>
     </section>
   );
