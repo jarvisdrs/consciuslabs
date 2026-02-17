@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   FileText, Video, Mail, Twitter, Image, 
@@ -9,30 +9,26 @@ interface OutputNode {
   id: string;
   label: string;
   icon: React.ElementType;
-  position: { x: number; y: number };
   color: string;
 }
 
 const outputNodes: OutputNode[] = [
-  { id: 'blog', label: 'Blog Post', icon: FileText, position: { x: 75, y: 10 }, color: '#8B5CF6' },
-  { id: 'newsletter', label: 'Newsletter', icon: Mail, position: { x: 85, y: 25 }, color: '#A78BFA' },
-  { id: 'tweet', label: 'Tweet / X', icon: Twitter, position: { x: 90, y: 40 }, color: '#60A5FA' },
-  { id: 'reel', label: 'Reel', icon: Video, position: { x: 88, y: 55 }, color: '#34D399' },
-  { id: 'infografica', label: 'Infografica', icon: Image, position: { x: 82, y: 70 }, color: '#10B981' },
-  { id: 'podcast', label: 'Podcast Clip', icon: Mic, position: { x: 72, y: 82 }, color: '#F59E0B' },
-  { id: 'story', label: 'Story', icon: Smartphone, position: { x: 58, y: 88 }, color: '#EF4444' },
-  { id: 'articolo', label: 'Articolo', icon: Newspaper, position: { x: 42, y: 88 }, color: '#EC4899' },
-  { id: 'linkedin', label: 'LinkedIn', icon: Briefcase, position: { x: 28, y: 82 }, color: '#3B82F6' },
-  { id: 'adcopy', label: 'Ad Copy', icon: Target, position: { x: 18, y: 70 }, color: '#8B5CF6' },
+  { id: 'blog', label: 'Blog Post', icon: FileText, color: '#8B5CF6' },
+  { id: 'newsletter', label: 'Newsletter', icon: Mail, color: '#A78BFA' },
+  { id: 'tweet', label: 'Tweet / X', icon: Twitter, color: '#60A5FA' },
+  { id: 'reel', label: 'Reel', icon: Video, color: '#34D399' },
+  { id: 'infografica', label: 'Infografica', icon: Image, color: '#10B981' },
+  { id: 'podcast', label: 'Podcast Clip', icon: Mic, color: '#F59E0B' },
+  { id: 'story', label: 'Story', icon: Smartphone, color: '#EF4444' },
+  { id: 'articolo', label: 'Articolo', icon: Newspaper, color: '#EC4899' },
+  { id: 'linkedin', label: 'LinkedIn', icon: Briefcase, color: '#3B82F6' },
+  { id: 'adcopy', label: 'Ad Copy', icon: Target, color: '#8B5CF6' },
 ];
 
 export function ContentFlowVisualization() {
-  const [hoveredNode, setHoveredNode] = useState<string | null>(null);
-  const [isVideoHovered, setIsVideoHovered] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
-  const [particles, setParticles] = useState<Array<{ id: number; nodeId: string; progress: number; speed: number }>>([]);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -41,325 +37,250 @@ export function ContentFlowVisualization() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Generate particles continuously
   useEffect(() => {
-    const createParticle = () => {
-      const randomNode = outputNodes[Math.floor(Math.random() * outputNodes.length)];
-      return {
-        id: Date.now() + Math.random(),
-        nodeId: randomNode.id,
-        progress: 0,
-        speed: 0.005 + Math.random() * 0.003,
-      };
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const resize = () => {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
     };
+    resize();
+    window.addEventListener('resize', resize);
 
-    const interval = setInterval(() => {
-      setParticles(prev => {
-        const filtered = prev.filter(p => p.progress < 1);
-        if (filtered.length < 20) {
-          return [...filtered, createParticle()];
-        }
-        return filtered;
-      });
-    }, 200);
+    // Flow lines configuration
+    const lines: Array<{
+      targetY: number;
+      amplitude: number;
+      frequency: number;
+      speed: number;
+      offset: number;
+      color: string;
+      width: number;
+    }> = outputNodes.map((node, i) => ({
+      targetY: isMobile 
+        ? (i + 1) * (canvas.getBoundingClientRect().height / (outputNodes.length + 1))
+        : canvas.getBoundingClientRect().height / 2 + (i - outputNodes.length / 2) * 35,
+      amplitude: isMobile ? 8 : 12 + Math.random() * 8,
+      frequency: 0.008 + Math.random() * 0.004,
+      speed: 2 + Math.random() * 1.5,
+      offset: Math.random() * Math.PI * 2,
+      color: node.color,
+      width: 2 + Math.random() * 2,
+    }));
 
-    return () => clearInterval(interval);
-  }, []);
+    // Particles for each line
+    const particles: Array<Array<{ x: number; progress: number; speed: number; size: number }>> = 
+      lines.map(() => []);
 
-  // Animate particles
-  useEffect(() => {
+    let time = 0;
+
     const animate = () => {
-      setParticles(prev => 
-        prev.map(p => ({
-          ...p,
-          progress: p.progress + p.speed,
-        })).filter(p => p.progress < 1)
-      );
+      const rect = canvas.getBoundingClientRect();
+      const width = rect.width;
+      const height = rect.height;
+      
+      ctx.clearRect(0, 0, width, height);
+      time += 0.016;
+
+      const startX = isMobile ? width * 0.15 : width * 0.12;
+      const endX = isMobile ? width * 0.85 : width * 0.88;
+
+      lines.forEach((line, lineIndex) => {
+        // Draw energy flow path
+        ctx.beginPath();
+        ctx.strokeStyle = line.color;
+        ctx.lineWidth = line.width;
+        ctx.globalAlpha = 0.3;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        const points: Array<{ x: number; y: number }> = [];
+        const steps = 100;
+        
+        for (let i = 0; i <= steps; i++) {
+          const t = i / steps;
+          const x = startX + (endX - startX) * t;
+          
+          // Sine wave flowing
+          const wave = Math.sin(t * Math.PI * 3 + time * line.speed + line.offset) * line.amplitude;
+          // Additional high frequency vibration for energy effect
+          const vibration = Math.sin(t * Math.PI * 12 + time * 8) * (line.amplitude * 0.15);
+          // Converge to targetY at the end
+          const y = height / 2 + wave + vibration * (1 - t) + (line.targetY - height / 2) * t * 0.3;
+          
+          points.push({ x, y });
+          
+          if (i === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+        }
+        ctx.stroke();
+
+        // Draw glowing energy core
+        ctx.globalAlpha = 0.6;
+        ctx.lineWidth = line.width * 0.5;
+        ctx.stroke();
+
+        // Spawn particles
+        if (Math.random() < 0.15) {
+          particles[lineIndex].push({
+            x: startX,
+            progress: 0,
+            speed: 0.008 + Math.random() * 0.004,
+            size: 2 + Math.random() * 2,
+          });
+        }
+
+        // Update and draw particles
+        ctx.globalAlpha = 1;
+        particles[lineIndex] = particles[lineIndex].filter(p => {
+          p.progress += p.speed;
+          
+          if (p.progress >= 1) return false;
+
+          const t = p.progress;
+          const x = startX + (endX - startX) * t;
+          const wave = Math.sin(t * Math.PI * 3 + time * line.speed + line.offset) * line.amplitude;
+          const vibration = Math.sin(t * Math.PI * 12 + time * 8) * (line.amplitude * 0.15);
+          const y = height / 2 + wave + vibration * (1 - t) + (line.targetY - height / 2) * t * 0.3;
+
+          // Draw particle with glow
+          const gradient = ctx.createRadialGradient(x, y, 0, x, y, p.size * 3);
+          gradient.addColorStop(0, line.color);
+          gradient.addColorStop(0.5, line.color + '80');
+          gradient.addColorStop(1, 'transparent');
+          
+          ctx.fillStyle = gradient;
+          ctx.beginPath();
+          ctx.arc(x, y, p.size * 3, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Core particle
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(x, y, p.size * 0.5, 0, Math.PI * 2);
+          ctx.fill();
+
+          return true;
+        });
+      });
+
+      // Draw VIDEO source node
+      ctx.globalAlpha = 1;
+      const sourceGradient = ctx.createRadialGradient(startX, height / 2, 0, startX, height / 2, 40);
+      sourceGradient.addColorStop(0, '#8B5CF6');
+      sourceGradient.addColorStop(0.5, '#8B5CF640');
+      sourceGradient.addColorStop(1, 'transparent');
+      ctx.fillStyle = sourceGradient;
+      ctx.beginPath();
+      ctx.arc(startX, height / 2, 40, 0, Math.PI * 2);
+      ctx.fill();
+
+      // VIDEO circle
+      ctx.strokeStyle = '#8B5CF6';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(startX, height / 2, 25, 0, Math.PI * 2);
+      ctx.fillStyle = 'hsl(220 20% 8%)';
+      ctx.fill();
+      ctx.stroke();
+
+      // VIDEO text
+      ctx.fillStyle = '#F5F0EB';
+      ctx.font = "600 12px 'Space Grotesk', sans-serif";
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('VIDEO', startX, height / 2);
+
       animationRef.current = requestAnimationFrame(animate);
     };
-    animationRef.current = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animationRef.current);
-  }, []);
 
-  const getParticlePosition = useCallback((nodeId: string, progress: number) => {
-    const node = outputNodes.find(n => n.id === nodeId);
-    if (!node) return { x: 50, y: 50 };
-    
-    // Start from center-left (VIDEO node)
-    const startX = isMobile ? 50 : 15;
-    const startY = isMobile ? 15 : 50;
-    
-    // End at node position
-    const endX = node.position.x;
-    const endY = node.position.y;
-    
-    // Bezier curve for organic flow
-    const controlX = isMobile ? 50 : 40;
-    const controlY = isMobile ? 40 : 50;
-    
-    const t = progress;
-    const x = (1 - t) * (1 - t) * startX + 2 * (1 - t) * t * controlX + t * t * endX;
-    const y = (1 - t) * (1 - t) * startY + 2 * (1 - t) * t * controlY + t * t * endY;
-    
-    return { x, y };
+    animate();
+
+    return () => {
+      window.removeEventListener('resize', resize);
+      cancelAnimationFrame(animationRef.current);
+    };
   }, [isMobile]);
-
-  const isNodeActive = (nodeId: string) => {
-    if (hoveredNode === nodeId) return true;
-    if (isVideoHovered) return true;
-    return false;
-  };
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 1, delay: 0.6 }}
-      className="mt-16 relative w-full"
-      ref={containerRef}
+      className="mt-12 relative w-full"
     >
-      <div className={`relative ${isMobile ? 'h-[600px]' : 'h-[400px]'} w-full`}>
-        <svg 
+      {/* Canvas for energy flows */}
+      <div className={`relative ${isMobile ? 'h-[500px]' : 'h-[280px]'} w-full`}>
+        <canvas
+          ref={canvasRef}
           className="absolute inset-0 w-full h-full"
-          viewBox="0 0 100 100"
-          preserveAspectRatio="xMidYMid meet"
-        >
-          <defs>
-            {/* Glow filters */}
-            <filter id="glow-violet" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-              <feMerge>
-                <feMergeNode in="coloredBlur"/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
-            <filter id="glow-accent" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
-              <feMerge>
-                <feMergeNode in="coloredBlur"/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
-            
-            {/* Gradients */}
-            <linearGradient id="flow-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.8" />
-              <stop offset="50%" stopColor="#10B981" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#3B82F6" stopOpacity="0.4" />
-            </linearGradient>
-          </defs>
+        />
 
-          {/* Flow paths from VIDEO to each node */}
-          {outputNodes.map((node) => {
-            const isActive = isNodeActive(node.id);
-            const startX = isMobile ? 50 : 15;
-            const startY = isMobile ? 15 : 50;
-            const controlX = isMobile ? 50 : 35;
-            const controlY = isMobile ? 35 : 50;
-            
-            return (
-              <g key={node.id}>
-                {/* Base path - subtle */}
-                <path
-                  d={`M ${startX} ${startY} Q ${controlX} ${controlY} ${node.position.x} ${node.position.y}`}
-                  fill="none"
-                  stroke={isActive ? node.color : 'hsl(220 16% 20%)'}
-                  strokeWidth={isActive ? 0.4 : 0.2}
-                  opacity={isActive ? 0.8 : 0.3}
-                  className="transition-all duration-300"
-                  filter={isActive ? 'url(#glow-violet)' : undefined}
-                />
-                
-                {/* Animated flow line */}
-                {isActive && (
-                  <motion.path
-                    d={`M ${startX} ${startY} Q ${controlX} ${controlY} ${node.position.x} ${node.position.y}`}
-                    fill="none"
-                    stroke={node.color}
-                    strokeWidth={0.6}
-                    strokeDasharray="4 2"
-                    initial={{ pathLength: 0, opacity: 0 }}
-                    animate={{ 
-                      pathLength: 1, 
-                      opacity: 1,
-                      strokeDashoffset: [0, -6],
-                    }}
-                    transition={{ 
-                      pathLength: { duration: 0.8, ease: "easeOut" },
-                      opacity: { duration: 0.3 },
-                      strokeDashoffset: { duration: 1.5, repeat: Infinity, ease: "linear" }
-                    }}
-                    filter="url(#glow-accent)"
-                  />
-                )}
-              </g>
-            );
-          })}
-
-          {/* Particles */}
-          {particles.map((particle) => {
-            const pos = getParticlePosition(particle.nodeId, particle.progress);
-            const node = outputNodes.find(n => n.id === particle.nodeId);
-            const isTargetHovered = hoveredNode === particle.nodeId;
-            
-            return (
-              <circle
-                key={particle.id}
-                cx={pos.x}
-                cy={pos.y}
-                r={isTargetHovered ? 1.2 : 0.8}
-                fill={node?.color || '#8B5CF6'}
-                opacity={1 - particle.progress * 0.5}
-                filter="url(#glow-accent)"
-                className="transition-all duration-150"
-              />
-            );
-          })}
-
-          {/* VIDEO Source Node */}
-          <g 
-            className="cursor-pointer"
-            onMouseEnter={() => !isMobile && setIsVideoHovered(true)}
-            onMouseLeave={() => setIsVideoHovered(false)}
-            onClick={() => isMobile && setIsVideoHovered(!isVideoHovered)}
-          >
-            {/* Outer glow ring */}
-            <motion.circle
-              cx={isMobile ? 50 : 15}
-              cy={isMobile ? 15 : 50}
-              r={isVideoHovered ? 8 : 6}
-              fill="none"
-              stroke="#8B5CF6"
-              strokeWidth={0.3}
-              opacity={isVideoHovered ? 0.6 : 0.3}
-              animate={{ 
-                r: isVideoHovered ? [8, 10, 8] : [6, 7, 6],
-                opacity: isVideoHovered ? [0.6, 0.3, 0.6] : [0.3, 0.15, 0.3]
+        {/* Output nodes positioned absolutely */}
+        {outputNodes.map((node, i) => {
+          const Icon = node.icon;
+          const top = isMobile 
+            ? `${((i + 1) / (outputNodes.length + 1)) * 100}%`
+            : `${50 + (i - outputNodes.length / 2) * 12}%`;
+          
+          return (
+            <motion.div
+              key={node.id}
+              className="absolute flex items-center gap-2"
+              style={{ 
+                right: isMobile ? '5%' : '3%',
+                top,
+                transform: 'translateY(-50%)',
               }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-              filter="url(#glow-violet)"
-            />
-            
-            {/* Main node circle */}
-            <circle
-              cx={isMobile ? 50 : 15}
-              cy={isMobile ? 15 : 50}
-              r={5}
-              fill="hsl(220 20% 8%)"
-              stroke="#8B5CF6"
-              strokeWidth={0.5}
-              filter={isVideoHovered ? 'url(#glow-violet)' : undefined}
-              className="transition-all duration-300"
-            />
-            
-            {/* VIDEO label */}
-            <text
-              x={isMobile ? 50 : 15}
-              y={isMobile ? 24 : 58}
-              textAnchor="middle"
-              fill="#F5F0EB"
-              fontSize="3"
-              fontFamily="'Space Grotesk', sans-serif"
-              fontWeight="600"
-              className="select-none"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.8 + i * 0.05 }}
             >
-              VIDEO
-            </text>
-          </g>
+              <div 
+                className="flex items-center justify-center w-8 h-8 rounded-full"
+                style={{ 
+                  backgroundColor: 'hsl(220 18% 10%)',
+                  border: `1px solid ${node.color}`,
+                  boxShadow: `0 0 15px ${node.color}40`,
+                }}
+              >
+                <Icon size={14} color={node.color} strokeWidth={1.5} />
+              </div>
+              <span 
+                className="text-xs font-medium hidden sm:block"
+                style={{ color: '#F5F0EB' }}
+              >
+                {node.label}
+              </span>
+            </motion.div>
+          );
+        })}
+      </div>
 
-          {/* Output Nodes */}
+      {/* Legend for mobile */}
+      {isMobile && (
+        <div className="mt-4 grid grid-cols-2 gap-2 px-4">
           {outputNodes.map((node) => {
             const Icon = node.icon;
-            const isActive = isNodeActive(node.id);
-            
             return (
-              <g 
-                key={node.id}
-                className="cursor-pointer"
-                onMouseEnter={() => !isMobile && setHoveredNode(node.id)}
-                onMouseLeave={() => setHoveredNode(null)}
-                onClick={() => isMobile && setHoveredNode(hoveredNode === node.id ? null : node.id)}
-              >
-                {/* Glow effect for active node */}
-                {isActive && (
-                  <motion.circle
-                    cx={node.position.x}
-                    cy={node.position.y}
-                    r={6}
-                    fill={node.color}
-                    opacity={0.2}
-                    animate={{ 
-                      r: [6, 8, 6],
-                      opacity: [0.2, 0.1, 0.2]
-                    }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                    filter="url(#glow-violet)"
-                  />
-                )}
-                
-                {/* Node circle */}
-                <motion.circle
-                  cx={node.position.x}
-                  cy={node.position.y}
-                  r={isActive ? 5 : 4}
-                  fill={isActive ? 'hsl(220 20% 6%)' : 'hsl(220 18% 10%)'}
-                  stroke={isActive ? node.color : 'hsl(220 16% 25%)'}
-                  strokeWidth={0.4}
-                  animate={{ scale: isActive ? 1.1 : 1 }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                  filter={isActive ? 'url(#glow-accent)' : undefined}
-                />
-                
-                {/* Icon */}
-                <foreignObject
-                  x={node.position.x - 2}
-                  y={node.position.y - 2}
-                  width={4}
-                  height={4}
-                  className="pointer-events-none"
-                >
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Icon 
-                      size={isMobile ? 14 : 10} 
-                      color={isActive ? node.color : 'hsl(215 15% 55%)'}
-                      strokeWidth={2}
-                    />
-                  </div>
-                </foreignObject>
-                
-                {/* Label */}
-                <motion.text
-                  x={node.position.x}
-                  y={node.position.y + 8}
-                  textAnchor="middle"
-                  fill={isActive ? '#F5F0EB' : 'hsl(215 15% 55%)'}
-                  fontSize="2.5"
-                  fontFamily="'Inter', sans-serif"
-                  fontWeight={isActive ? '500' : '400'}
-                  initial={{ opacity: 0, y: node.position.y + 6 }}
-                  animate={{ 
-                    opacity: isActive ? 1 : 0.7,
-                    y: node.position.y + 8
-                  }}
-                  transition={{ duration: 0.3 }}
-                  className="select-none"
-                >
-                  {node.label}
-                </motion.text>
-              </g>
+              <div key={node.id} className="flex items-center gap-2">
+                <Icon size={12} color={node.color} />
+                <span className="text-xs text-muted-foreground">{node.label}</span>
+              </div>
             );
           })}
-        </svg>
-
-        {/* Mobile hint */}
-        {isMobile && (
-          <div className="absolute bottom-4 left-0 right-0 text-center">
-            <p className="text-xs text-muted-foreground">
-              Tocca un nodo per vedere il flusso
-            </p>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </motion.div>
   );
 }
