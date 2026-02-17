@@ -64,148 +64,140 @@ export function ContentFlowVisualization() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    let isActive = true;
+
     const resize = () => {
-      const dpr = window.devicePixelRatio || 1;
+      if (!canvas || !isActive) return;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      ctx.scale(dpr, dpr);
+      if (rect.width > 0 && rect.height > 0) {
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.scale(dpr, dpr);
+      }
     };
+
     resize();
     window.addEventListener('resize', resize);
 
     const animate = () => {
+      if (!canvas || !ctx || !isActive) return;
+      
       const rect = canvas.getBoundingClientRect();
       const width = rect.width;
       const height = rect.height;
       
+      if (width === 0 || height === 0) {
+        animationRef.current = requestAnimationFrame(animate);
+        return;
+      }
+
       ctx.clearRect(0, 0, width, height);
       timeRef.current += 0.008;
       const time = timeRef.current;
 
-      // Wider, more spread layout
-      const startX = isMobile ? width * 0.12 : width * 0.08;
+      // Layout
+      const startX = isMobile ? width * 0.15 : width * 0.12;
       const startY = height / 2;
-      const spreadStart = isMobile ? width * 0.35 : width * 0.30;
-      const endX = isMobile ? width * 0.88 : width * 0.92;
+      const endX = isMobile ? width * 0.85 : width * 0.90;
 
       // Calculate node positions
       const nodePositions = outputNodes.map((_, i) => {
         const total = outputNodes.length;
-        const spacing = isMobile ? height * 0.8 / (total - 1) : height * 0.85 / (total - 1);
-        const startOffset = isMobile ? height * 0.1 : height * 0.075;
-        const y = startOffset + i * spacing;
+        const availableHeight = height * 0.82;
+        const topMargin = height * 0.09;
+        const spacing = availableHeight / (total - 1);
+        const y = topMargin + i * spacing;
         return { x: endX, y };
       });
 
-      // Draw energy flow channels (funnel style with soft curves)
+      // Draw energy flows - funnel style with soft curves
       outputNodes.forEach((node, i) => {
         const endPos = nodePositions[i];
         const color = node.color;
 
-        // Create funnel path with SOFT curves (not elbow)
         ctx.beginPath();
         
-        const narrowWidth = isMobile ? 2.5 : 3;
-        const spreadWidth = isMobile ? 2 : 2.5;
+        const baseWidth = isMobile ? 3 : 4;
         
+        // Soft funnel shape
         if (isMobile) {
-          // Mobile vertical: soft curves spreading down
-          const funnelY = startY + 20;
-          
-          // Left edge
-          ctx.moveTo(startX - narrowWidth, startY);
-          ctx.quadraticCurveTo(startX - narrowWidth, funnelY, spreadStart, endPos.y - spreadWidth * 2);
-          ctx.quadraticCurveTo(spreadStart + 20, endPos.y, endPos.x - 16, endPos.y);
-          
-          // Right edge back
-          ctx.lineTo(endPos.x - 16, endPos.y + spreadWidth);
-          ctx.quadraticCurveTo(spreadStart + 20, endPos.y + spreadWidth, spreadStart, endPos.y + spreadWidth * 2);
-          ctx.quadraticCurveTo(startX + narrowWidth, funnelY, startX + narrowWidth, startY);
+          // Mobile: spread from top center
+          ctx.moveTo(startX - baseWidth, startY);
+          ctx.quadraticCurveTo(startX - baseWidth * 2, (startY + endPos.y) / 2, endPos.x - 14, endPos.y - 3);
+          ctx.lineTo(endPos.x - 14, endPos.y + 3);
+          ctx.quadraticCurveTo(startX + baseWidth * 2, (startY + endPos.y) / 2, startX + baseWidth, startY);
         } else {
-          // Desktop horizontal: wide funnel with soft bezier curves
-          const funnelX = spreadStart;
+          // Desktop: horizontal funnel
+          const midX = (startX + endPos.x) / 2;
           
-          // Top edge - soft curve from center spreading up/down to target
-          ctx.moveTo(startX, startY - narrowWidth);
-          
-          // First soft curve: from video to spread point
-          const controlX1 = startX + (funnelX - startX) * 0.5;
-          const controlY1 = startY + (endPos.y - startY) * 0.3;
-          ctx.quadraticCurveTo(controlX1, startY - narrowWidth, funnelX - 30, endPos.y - spreadWidth * 1.5);
-          
-          // Second soft curve: from spread point to node
-          ctx.quadraticCurveTo(funnelX, endPos.y - spreadWidth, endPos.x - 18, endPos.y - 3);
-          
-          // Bottom edge back
-          ctx.lineTo(endPos.x - 18, endPos.y + 3);
-          ctx.quadraticCurveTo(funnelX, endPos.y + spreadWidth, funnelX - 30, endPos.y + spreadWidth * 1.5);
-          
-          // Back to start
-          const controlX2 = startX + (funnelX - startX) * 0.5;
-          const controlY2 = startY + (endPos.y - startY) * 0.3;
-          ctx.quadraticCurveTo(controlX2, startY + narrowWidth, startX, startY + narrowWidth);
+          // Top curve
+          ctx.moveTo(startX, startY - baseWidth);
+          ctx.quadraticCurveTo(midX, startY - baseWidth, endPos.x - 16, endPos.y - 4);
+          ctx.lineTo(endPos.x - 16, endPos.y + 4);
+          ctx.quadraticCurveTo(midX, startY + baseWidth, startX, startY + baseWidth);
         }
         
         ctx.closePath();
 
-        // Flowing gradient for energy effect
+        // Flowing gradient
         const gradient = ctx.createLinearGradient(startX, startY, endPos.x, endPos.y);
         const offset = (time + i * 0.1) % 1;
-        const glowWidth = 0.15;
+        const glowWidth = 0.18;
         
-        gradient.addColorStop(0, color + '20');
-        gradient.addColorStop(Math.max(0, offset - glowWidth), color + '50');
+        gradient.addColorStop(0, color + '15');
+        gradient.addColorStop(Math.max(0, offset - glowWidth), color + '40');
         gradient.addColorStop(offset, color);
-        gradient.addColorStop(Math.min(1, offset + glowWidth), color + '50');
-        gradient.addColorStop(1, color + '25');
+        gradient.addColorStop(Math.min(1, offset + glowWidth), color + '40');
+        gradient.addColorStop(1, color + '20');
 
         ctx.fillStyle = gradient;
         ctx.fill();
 
-        // Outer glow
+        // Soft outline
         ctx.strokeStyle = color;
-        ctx.lineWidth = 1;
-        ctx.globalAlpha = 0.4;
+        ctx.lineWidth = 0.5;
+        ctx.globalAlpha = 0.3;
         ctx.stroke();
         ctx.globalAlpha = 1;
 
-        // Connector to icon
+        // Connector line to icon
         ctx.beginPath();
         ctx.strokeStyle = color;
         ctx.lineWidth = 2;
-        ctx.globalAlpha = 0.9;
-        ctx.moveTo(endPos.x - 18, endPos.y);
-        ctx.lineTo(endPos.x - 10, endPos.y);
+        ctx.globalAlpha = 0.8;
+        ctx.moveTo(endPos.x - 16, endPos.y);
+        ctx.lineTo(endPos.x - 8, endPos.y);
         ctx.stroke();
         ctx.globalAlpha = 1;
       });
 
       // VIDEO source node
-      const pulseRadius = 28 + Math.sin(time * 2) * 2;
+      const pulse = Math.sin(time * 2) * 2;
       
-      ctx.globalAlpha = 0.25;
-      const glowGradient = ctx.createRadialGradient(startX, startY, 0, startX, startY, pulseRadius + 10);
-      glowGradient.addColorStop(0, '#8B5CF6');
-      glowGradient.addColorStop(1, 'transparent');
-      ctx.fillStyle = glowGradient;
+      ctx.globalAlpha = 0.2;
+      const glowGrad = ctx.createRadialGradient(startX, startY, 0, startX, startY, 30 + pulse);
+      glowGrad.addColorStop(0, '#8B5CF6');
+      glowGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = glowGrad;
       ctx.beginPath();
-      ctx.arc(startX, startY, pulseRadius + 10, 0, Math.PI * 2);
+      ctx.arc(startX, startY, 30 + pulse, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.globalAlpha = 1;
       ctx.fillStyle = 'hsl(220 20% 6%)';
       ctx.beginPath();
-      ctx.arc(startX, startY, 22, 0, Math.PI * 2);
+      ctx.arc(startX, startY, 20, 0, Math.PI * 2);
       ctx.fill();
       
       ctx.strokeStyle = '#8B5CF6';
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      ctx.fillStyle = '#8B5CF640';
+      ctx.fillStyle = '#8B5CF630';
       ctx.beginPath();
-      ctx.arc(startX, startY, 15, 0, Math.PI * 2);
+      ctx.arc(startX, startY, 14, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = '#F5F0EB';
@@ -214,12 +206,15 @@ export function ContentFlowVisualization() {
       ctx.textBaseline = 'middle';
       ctx.fillText('VIDEO', startX, startY);
 
-      animationRef.current = requestAnimationFrame(animate);
+      if (isActive) {
+        animationRef.current = requestAnimationFrame(animate);
+      }
     };
 
     animate();
 
     return () => {
+      isActive = false;
       window.removeEventListener('resize', resize);
       cancelAnimationFrame(animationRef.current);
     };
@@ -230,29 +225,33 @@ export function ContentFlowVisualization() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 1, delay: 0.6 }}
-      className="mt-12 relative w-full"
+      className="mt-12 relative w-full overflow-hidden"
     >
-      {/* Canvas - wider */}
-      <div className={`relative ${isMobile ? 'h-[520px]' : 'h-[380px]'} w-full`}>
+      <div 
+        className="relative w-full mx-auto"
+        style={{ height: isMobile ? '500px' : '360px' }}
+      >
         <canvas
           ref={canvasRef}
-          className="absolute inset-0 w-full h-full"
+          className="absolute inset-0 w-full h-full block"
+          style={{ maxWidth: '100%' }}
         />
 
         {/* Output nodes */}
         {outputNodes.map((node, i) => {
           const Icon = node.icon;
           const total = outputNodes.length;
-          const spacing = isMobile ? 520 * 0.8 / (total - 1) : 380 * 0.85 / (total - 1);
-          const startOffset = isMobile ? 520 * 0.1 : 380 * 0.075;
-          const top = startOffset + i * spacing;
+          const availableHeight = isMobile ? 500 * 0.82 : 360 * 0.82;
+          const topMargin = isMobile ? 500 * 0.09 : 360 * 0.09;
+          const spacing = availableHeight / (total - 1);
+          const top = topMargin + i * spacing;
           
           return (
             <motion.div
               key={node.id}
               className="absolute flex items-center gap-2"
               style={{ 
-                right: isMobile ? '5%' : '4%',
+                right: isMobile ? '4%' : '5%',
                 top: `${top}px`,
                 transform: 'translateY(-50%)',
               }}
@@ -265,7 +264,7 @@ export function ContentFlowVisualization() {
                 style={{ 
                   backgroundColor: 'hsl(220 18% 10%)',
                   border: `1.5px solid ${node.color}`,
-                  boxShadow: `0 0 12px ${node.color}50`,
+                  boxShadow: `0 0 10px ${node.color}50`,
                 }}
               >
                 <Icon size={13} color={node.color} strokeWidth={1.5} />
