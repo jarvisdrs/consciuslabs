@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  FileText, Video, Mail, Twitter, Image, 
-  Mic, Smartphone, Briefcase, Newspaper, Target 
+  FileText, Mail, Twitter, Image, 
+  Mic, Smartphone, Briefcase, Newspaper, Target, Video
 } from 'lucide-react';
 
 interface OutputNode {
@@ -29,7 +29,7 @@ export function ContentFlowVisualization() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
   const [isMobile, setIsMobile] = useState(false);
-  const nodePositionsRef = useRef<Array<{ x: number; y: number }>>([]);
+  const timeRef = useRef(0);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -51,33 +51,9 @@ export function ContentFlowVisualization() {
       canvas.width = rect.width * dpr;
       canvas.height = rect.height * dpr;
       ctx.scale(dpr, dpr);
-      
-      // Update node positions for canvas drawing
-      const width = rect.width;
-      const height = rect.height;
-      const endX = isMobile ? width * 0.82 : width * 0.90;
-      
-      nodePositionsRef.current = outputNodes.map((_, i) => {
-        const y = isMobile 
-          ? (i + 1) * (height / (outputNodes.length + 1))
-          : height / 2 + (i - outputNodes.length / 2) * 32;
-        return { x: endX, y };
-      });
     };
     resize();
     window.addEventListener('resize', resize);
-
-    // Straight lines configuration - no wave, fixed paths
-    const lines = outputNodes.map((node, i) => ({
-      targetIndex: i,
-      color: node.color,
-      width: 2 + Math.random() * 1.5,
-      offset: Math.random() * 100, // For particle spacing
-    }));
-
-    // Particles for each line
-    const particles: Array<Array<{ progress: number; speed: number; size: number }>> = 
-      lines.map(() => []);
 
     const animate = () => {
       const rect = canvas.getBoundingClientRect();
@@ -85,126 +61,166 @@ export function ContentFlowVisualization() {
       const height = rect.height;
       
       ctx.clearRect(0, 0, width, height);
+      timeRef.current += 0.008;
+      const time = timeRef.current;
 
-      const startX = isMobile ? width * 0.12 : width * 0.08;
-      const startY = height / 2;
-      const nodePositions = nodePositionsRef.current;
+      const centerX = isMobile ? width * 0.5 : width * 0.15;
+      const centerY = height / 2;
+      const endX = isMobile ? width * 0.5 : width * 0.88;
+      const spreadStart = isMobile ? height * 0.18 : width * 0.35; // Where lines start spreading
+      const iconX = isMobile ? width * 0.5 : width * 0.92;
 
-      lines.forEach((line, lineIndex) => {
-        if (!nodePositions[lineIndex]) return;
-        
-        const endPos = nodePositions[lineIndex];
-        
-        // Calculate control point for smooth curve (very subtle)
-        const midX = (startX + endPos.x) / 2;
-        const controlX = midX;
-        const controlY = endPos.y; // Curve ends at target Y
-
-        // Draw the energy line (fixed, no animation on path)
-        ctx.beginPath();
-        ctx.strokeStyle = line.color;
-        ctx.lineWidth = line.width;
-        ctx.globalAlpha = 0.4;
-        ctx.lineCap = 'round';
-        
-        // Quadratic curve from VIDEO to node
-        ctx.moveTo(startX, startY);
-        ctx.quadraticCurveTo(controlX, controlY, endPos.x - 20, endPos.y);
-        ctx.stroke();
-
-        // Draw stronger glow line
-        ctx.globalAlpha = 0.15;
-        ctx.lineWidth = line.width * 3;
-        ctx.stroke();
-
-        // Spawn particles continuously
-        if (Math.random() < 0.12) {
-          particles[lineIndex].push({
-            progress: 0,
-            speed: 0.015 + Math.random() * 0.008,
-            size: 2 + Math.random() * 1.5,
-          });
-        }
-
-        // Update and draw particles flowing along the path
-        ctx.globalAlpha = 1;
-        particles[lineIndex] = particles[lineIndex].filter(p => {
-          p.progress += p.speed;
-          
-          if (p.progress >= 1) return false;
-
-          const t = p.progress;
-          // Quadratic Bezier point calculation
-          const invT = 1 - t;
-          const x = invT * invT * startX + 2 * invT * t * controlX + t * t * (endPos.x - 20);
-          const y = invT * invT * startY + 2 * invT * t * controlY + t * t * endPos.y;
-
-          // Draw particle with glow
-          const gradient = ctx.createRadialGradient(x, y, 0, x, y, p.size * 4);
-          gradient.addColorStop(0, '#ffffff');
-          gradient.addColorStop(0.3, line.color);
-          gradient.addColorStop(0.7, line.color + '60');
-          gradient.addColorStop(1, 'transparent');
-          
-          ctx.fillStyle = gradient;
-          ctx.beginPath();
-          ctx.arc(x, y, p.size * 4, 0, Math.PI * 2);
-          ctx.fill();
-
-          // Bright core
-          ctx.fillStyle = '#ffffff';
-          ctx.beginPath();
-          ctx.arc(x, y, p.size * 0.6, 0, Math.PI * 2);
-          ctx.fill();
-
-          return true;
-        });
-
-        // Draw connection to icon (the final straight line)
-        ctx.globalAlpha = 0.6;
-        ctx.lineWidth = 1;
-        ctx.strokeStyle = line.color;
-        ctx.beginPath();
-        ctx.moveTo(endPos.x - 20, endPos.y);
-        ctx.lineTo(endPos.x - 4, endPos.y);
-        ctx.stroke();
+      // Calculate node positions (for reference)
+      const nodePositions = outputNodes.map((_, i) => {
+        const total = outputNodes.length;
+        const spacing = isMobile ? height * 0.75 / total : height * 0.8 / total;
+        const startOffset = isMobile ? height * 0.15 : height * 0.1;
+        const y = isMobile 
+          ? startOffset + i * spacing
+          : height * 0.1 + i * spacing + spacing / 2;
+        return { x: iconX, y };
       });
 
-      // Draw VIDEO source node with pulse
-      const time = Date.now() / 1000;
-      const pulseRadius = 30 + Math.sin(time * 2) * 3;
+      // Draw each flow line
+      outputNodes.forEach((node, i) => {
+        const endPos = nodePositions[i];
+        const color = node.color;
+
+        // Create funnel path:
+        // 1. Start from center (narrow)
+        // 2. Stay narrow until spreadStart
+        // 3. Then diverge to respective node
+        
+        ctx.beginPath();
+        
+        // Determine control points for funnel effect
+        const narrowWidth = isMobile ? 3 : 4;
+        const spreadWidth = isMobile ? 2 : 2.5;
+        
+        // Left side of line (top when horizontal, left when vertical)
+        // Start from center
+        if (isMobile) {
+          // Vertical layout: funnel spreads downward
+          const funnelY = centerY - 30;
+          ctx.moveTo(centerX - narrowWidth, centerY);
+          ctx.lineTo(centerX - narrowWidth, funnelY);
+          ctx.quadraticCurveTo(
+            centerX - spreadWidth * 3, 
+            (funnelY + endPos.y) / 2,
+            endPos.x - spreadWidth * 4, 
+            endPos.y
+          );
+          ctx.lineTo(endPos.x + spreadWidth * 4, endPos.y);
+          ctx.quadraticCurveTo(
+            centerX + spreadWidth * 3, 
+            (funnelY + endPos.y) / 2,
+            centerX + narrowWidth, 
+            funnelY
+          );
+          ctx.lineTo(centerX + narrowWidth, centerY);
+        } else {
+          // Horizontal layout: funnel spreads to right
+          const funnelX = spreadStart;
+          ctx.moveTo(centerX, centerY - narrowWidth);
+          ctx.lineTo(funnelX, centerY - narrowWidth);
+          ctx.quadraticCurveTo(
+            (funnelX + endPos.x) / 2, 
+            centerY - spreadWidth * 2,
+            endPos.x - 25, 
+            endPos.y - spreadWidth
+          );
+          ctx.lineTo(endPos.x - 25, endPos.y + spreadWidth);
+          ctx.quadraticCurveTo(
+            (funnelX + endPos.x) / 2, 
+            centerY + spreadWidth * 2,
+            funnelX, 
+            centerY + narrowWidth
+          );
+          ctx.lineTo(centerX, centerY + narrowWidth);
+        }
+        
+        ctx.closePath();
+
+        // Create gradient for flowing glow effect
+        const gradient = ctx.createLinearGradient(
+          isMobile ? 0 : centerX, 
+          isMobile ? centerY : 0,
+          isMobile ? 0 : endPos.x,
+          isMobile ? endPos.y : 0
+        );
+
+        // Animate the gradient stops for flowing effect
+        const offset = (time + i * 0.1) % 1;
+        const glowWidth = 0.15;
+        
+        gradient.addColorStop(0, color + '20');
+        gradient.addColorStop(Math.max(0, offset - glowWidth), color + '30');
+        gradient.addColorStop(offset, color + 'FF');
+        gradient.addColorStop(Math.min(1, offset + glowWidth), color + '30');
+        gradient.addColorStop(1, color + '20');
+
+        ctx.fillStyle = gradient;
+        ctx.fill();
+
+        // Draw outline
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 0.5;
+        ctx.globalAlpha = 0.5;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+
+        // Draw connecting line to icon
+        ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.globalAlpha = 0.8;
+        if (isMobile) {
+          ctx.moveTo(endPos.x - spreadWidth * 4, endPos.y);
+          ctx.lineTo(endPos.x - 18, endPos.y);
+        } else {
+          ctx.moveTo(endPos.x - 25, endPos.y);
+          ctx.lineTo(endPos.x - 14, endPos.y);
+        }
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      });
+
+      // Draw VIDEO source node
+      const pulseRadius = 28 + Math.sin(time * 3) * 2;
       
-      ctx.globalAlpha = 0.3;
-      const sourceGradient = ctx.createRadialGradient(startX, startY, 0, startX, startY, pulseRadius);
-      sourceGradient.addColorStop(0, '#8B5CF6');
-      sourceGradient.addColorStop(1, 'transparent');
-      ctx.fillStyle = sourceGradient;
+      // Outer glow
+      ctx.globalAlpha = 0.25;
+      const glowGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, pulseRadius + 10);
+      glowGradient.addColorStop(0, '#8B5CF6');
+      glowGradient.addColorStop(1, 'transparent');
+      ctx.fillStyle = glowGradient;
       ctx.beginPath();
-      ctx.arc(startX, startY, pulseRadius, 0, Math.PI * 2);
+      ctx.arc(centerX, centerY, pulseRadius + 10, 0, Math.PI * 2);
       ctx.fill();
 
-      // VIDEO circle
+      // Core circle
       ctx.globalAlpha = 1;
+      ctx.fillStyle = 'hsl(220 20% 6%)';
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, 22, 0, Math.PI * 2);
+      ctx.fill();
+      
       ctx.strokeStyle = '#8B5CF6';
       ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(startX, startY, 22, 0, Math.PI * 2);
-      ctx.fillStyle = 'hsl(220 20% 6%)';
-      ctx.fill();
       ctx.stroke();
 
       // Inner glow
-      ctx.fillStyle = '#8B5CF620';
+      ctx.fillStyle = '#8B5CF630';
       ctx.beginPath();
-      ctx.arc(startX, startY, 18, 0, Math.PI * 2);
+      ctx.arc(centerX, centerY, 16, 0, Math.PI * 2);
       ctx.fill();
 
-      // VIDEO text
+      // VIDEO label
       ctx.fillStyle = '#F5F0EB';
-      ctx.font = "600 11px 'Space Grotesk', sans-serif";
+      ctx.font = "600 10px 'Space Grotesk', sans-serif";
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('VIDEO', startX, startY);
+      ctx.fillText('VIDEO', centerX, centerY);
 
       animationRef.current = requestAnimationFrame(animate);
     };
@@ -225,67 +241,72 @@ export function ContentFlowVisualization() {
       className="mt-12 relative w-full"
     >
       {/* Canvas for energy flows */}
-      <div className={`relative ${isMobile ? 'h-[520px]' : 'h-[320px]'} w-full`}>
+      <div className={`relative ${isMobile ? 'h-[500px]' : 'h-[360px]'} w-full`}>
         <canvas
           ref={canvasRef}
           className="absolute inset-0 w-full h-full"
         />
 
-        {/* Output nodes - positioned to align with canvas lines */}
+        {/* Output icons - positioned at line endings */}
         {outputNodes.map((node, i) => {
           const Icon = node.icon;
-          const top = isMobile 
-            ? `${((i + 1) / (outputNodes.length + 1)) * 100}%`
-            : `${50 + (i - outputNodes.length / 2) * 10}%`;
+          
+          // Calculate position matching canvas
+          const total = outputNodes.length;
+          const spacing = isMobile ? 500 / total : 360 * 0.8 / total;
+          const startOffset = isMobile ? 75 : 36;
+          
+          const style: React.CSSProperties = isMobile ? {
+            position: 'absolute',
+            left: '50%',
+            top: `${startOffset + i * spacing}px`,
+            transform: 'translateX(-50%)',
+          } : {
+            position: 'absolute',
+            right: '4%',
+            top: `${10 + i * (80 / total) + (80 / total / 2)}%`,
+            transform: 'translateY(-50%)',
+          };
           
           return (
             <motion.div
               key={node.id}
-              className="absolute flex items-center gap-2"
-              style={{ 
-                right: isMobile ? '4%' : '2%',
-                top,
-                transform: 'translateY(-50%)',
-              }}
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.8 + i * 0.04 }}
+              className="flex items-center gap-2"
+              style={style}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4, delay: 0.9 + i * 0.03 }}
             >
+              {!isMobile && (
+                <span 
+                  className="text-xs font-medium whitespace-nowrap pr-2"
+                  style={{ color: '#F5F0EB' }}
+                >
+                  {node.label}
+                </span>
+              )}
               <div 
                 className="flex items-center justify-center w-7 h-7 rounded-full"
                 style={{ 
                   backgroundColor: 'hsl(220 18% 10%)',
                   border: `1.5px solid ${node.color}`,
-                  boxShadow: `0 0 12px ${node.color}50`,
+                  boxShadow: `0 0 10px ${node.color}60, inset 0 0 5px ${node.color}20`,
                 }}
               >
                 <Icon size={13} color={node.color} strokeWidth={1.5} />
               </div>
-              <span 
-                className="text-xs font-medium hidden sm:block whitespace-nowrap"
-                style={{ color: '#F5F0EB' }}
-              >
-                {node.label}
-              </span>
+              {isMobile && (
+                <span 
+                  className="text-xs font-medium whitespace-nowrap"
+                  style={{ color: '#F5F0EB' }}
+                >
+                  {node.label}
+                </span>
+              )}
             </motion.div>
           );
         })}
       </div>
-
-      {/* Legend for mobile */}
-      {isMobile && (
-        <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 px-4">
-          {outputNodes.map((node) => {
-            const Icon = node.icon;
-            return (
-              <div key={node.id} className="flex items-center gap-2">
-                <Icon size={11} color={node.color} />
-                <span className="text-xs text-muted-foreground">{node.label}</span>
-              </div>
-            );
-          })}
-        </div>
-      )}
     </motion.div>
   );
 }
