@@ -3,7 +3,7 @@ import { Linkedin, Twitter, Instagram, Send } from "lucide-react";
 
 const links = {
   Servizi: ["Content Multiplication", "Workflow Automation", "Multi-Platform", "Brand Consistency"],
-  "Chi Siamo": ["Il Team", "La Mission"],
+  "Chi Siamo": [{ label: "Il Team", href: "/chi-siamo" }, { label: "La Mission", href: "/chi-siamo" }],
   Supporto: ["Contatti", "Pricing", "FAQ"],
 };
 
@@ -58,11 +58,17 @@ export function Footer() {
             <div key={title}>
               <h4 className="text-sm font-semibold font-display mb-4">{title}</h4>
               <ul className="space-y-2">
-                {items.map((item) => (
-                  <li key={item}>
-                    <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                      {item}
-                    </a>
+                {items.map((item, index) => (
+                  <li key={index}>
+                    {typeof item === 'string' ? (
+                      <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                        {item}
+                      </a>
+                    ) : (
+                      <a href={item.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                        {item.label}
+                      </a>
+                    )}
                   </li>
                 ))}
               </ul>

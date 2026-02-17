@@ -5,42 +5,42 @@ import { ArrowUpRight, Play, FileText, Instagram, Linkedin } from "lucide-react"
 
 const casiStudio = [
   {
-    cliente: "Marco B.",
-    settore: "Business Coach",
-    prima: "1 video a settimana, 3K follower su LinkedIn",
-    dopo: "15 contenuti/settimana, 12K follower (+300%)",
+    cliente: "LOOK MI",
+    settore: "Media Agency",
+    prima: "2 video al mese, pochi contenuti social",
+    dopo: "4 video → 30 contenuti/mese, presenza costante",
     risultati: [
-      "+400% engagement su LinkedIn",
-      "3 lead qualificati/week",
-      "5 ore settimanali risparmiate"
+      "+250% engagement su Instagram",
+      "5 lead qualificati/mese",
+      "10 ore settimanali risparmiate"
     ],
     tempo: "3 mesi",
     piano: "Professional"
   },
   {
-    cliente: "Studio Progetti Digitali",
-    settore: "Agenzia Web",
-    prima: "Solo portfolio, nessun contenuto social",
-    dopo: "2 video case study → 20 contenuti/mese",
+    cliente: "Cimena",
+    settore: "Casa di produzione",
+    prima: "Contenuti sporadici, nessuna strategia",
+    dopo: "8 video → 50+ contenuti/mese, multi-piattaforma",
     risultati: [
-      "+200% visibilità su Instagram",
-      "4 richieste commerciali/mese",
-      "1 cliente acquisito (€15K progetto)"
+      "+400% visibilità online",
+      "3 nuovi clienti acquisiti",
+      "Brand recognition rafforzata"
     ],
-    tempo: "2 mesi",
+    tempo: "4 mesi",
     piano: "Business"
   },
   {
-    cliente: "Elena R.",
-    settore: "Nutrizionista",
-    prima: "Blog poco trafficato, pochi pazienti online",
-    dopo: "1 video settimanale → contenuti multi-piattaforma",
+    cliente: "Kamil A.",
+    settore: "Film-maker",
+    prima: "Portfolio silenzioso, pochi contatti",
+    dopo: "2 video → 15 contenuti/mese",
     risultati: [
-      "+150% traffico sul sito",
-      "8 consulenze/mese da social",
-      "€3K fatturato extra/mese"
+      "+180% traffico profilo",
+      "2 commissioni/mese da social",
+      "Network professionale espanso"
     ],
-    tempo: "4 mesi",
+    tempo: "2 mesi",
     piano: "Starter"
   }
 ];

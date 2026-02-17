@@ -2,7 +2,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
-import { Target, Heart, Lightbulb, Users, Sparkles, ArrowRight, Linkedin, Twitter } from "lucide-react";
+import { Target, Heart, Lightbulb, Users, Sparkles, ArrowRight, Linkedin, Instagram } from "lucide-react";
 
 const values = [
   {
@@ -39,8 +39,8 @@ const team = [
     nome: "Simone Santus",
     ruolo: "Founder & CEO",
     bio: "Appassionato di marketing digitale e automazione. Dopo anni a gestire contenuti per brand e creator, ha fondato ConsciusLabs per risolvere il problema del tempo sprecato nella creazione di contenuti.",
-    linkedin: "#",
-    twitter: "#",
+    linkedin: "https://www.linkedin.com/in/simone-santus-3817b114b/",
+    instagram: "https://www.instagram.com/simomlcrw/",
     iniziali: "SS"
   },
   {
@@ -48,7 +48,7 @@ const team = [
     ruolo: "Co-Founder & Head of Content",
     bio: "Copywriter e content strategist con esperienza in agenzia. Specialista nel repurposing di contenuti long-form in asset multi-piattaforma. Gestisce la qualità e la coerenza di ogni progetto.",
     linkedin: "#",
-    twitter: "#",
+    instagram: "https://www.instagram.com/atomrahfilms/",
     iniziali: "AU"
   }
 ];
@@ -126,11 +126,11 @@ export default function ChiSiamo() {
                           <p className="text-sm text-accent mb-2">{member.ruolo}</p>
                           <p className="text-sm text-muted-foreground mb-4">{member.bio}</p>
                           <div className="flex gap-3">
-                            <a href={member.linkedin} className="text-muted-foreground hover:text-primary transition-colors">
+                            <a href={member.linkedin} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
                               <Linkedin size={18} />
                             </a>
-                            <a href={member.twitter} className="text-muted-foreground hover:text-primary transition-colors">
-                              <Twitter size={18} />
+                            <a href={member.instagram} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                              <Instagram size={18} />
                             </a>
                           </div>
                         </div>
