@@ -80,117 +80,136 @@ export function ContentFlowVisualization() {
       const height = rect.height;
       
       ctx.clearRect(0, 0, width, height);
-      timeRef.current += 0.01;
+      timeRef.current += 0.008;
       const time = timeRef.current;
 
-      // Centered layout - shorter flow
-      const startX = isMobile ? width * 0.15 : width * 0.22;
+      // Wider, more spread layout
+      const startX = isMobile ? width * 0.12 : width * 0.08;
       const startY = height / 2;
-      const iconX = isMobile ? width * 0.75 : width * 0.78; // Closer to center
-      const nodeRadius = isMobile ? 14 : 16;
+      const spreadStart = isMobile ? width * 0.35 : width * 0.30;
+      const endX = isMobile ? width * 0.88 : width * 0.92;
 
-      // Calculate node positions (n8n style - evenly distributed)
+      // Calculate node positions
       const nodePositions = outputNodes.map((_, i) => {
         const total = outputNodes.length;
-        const availableHeight = height * 0.85;
-        const topMargin = height * 0.075;
-        const spacing = availableHeight / (total - 1);
-        const y = topMargin + i * spacing;
-        return { x: iconX, y };
+        const spacing = isMobile ? height * 0.8 / (total - 1) : height * 0.85 / (total - 1);
+        const startOffset = isMobile ? height * 0.1 : height * 0.075;
+        const y = startOffset + i * spacing;
+        return { x: endX, y };
       });
 
-      // Draw connection lines from center to each node (n8n style)
+      // Draw energy flow channels (funnel style with soft curves)
       outputNodes.forEach((node, i) => {
         const endPos = nodePositions[i];
         const color = node.color;
 
+        // Create funnel path with SOFT curves (not elbow)
         ctx.beginPath();
         
-        // n8n style: straight lines from center, diverging cleanly
+        const narrowWidth = isMobile ? 2.5 : 3;
+        const spreadWidth = isMobile ? 2 : 2.5;
+        
         if (isMobile) {
-          // Mobile: lines from left center spreading right
-          ctx.moveTo(startX + 20, startY);
+          // Mobile vertical: soft curves spreading down
+          const funnelY = startY + 20;
           
-          // Control point for smooth curve to node
-          const midX = (startX + endPos.x) / 2;
-          ctx.quadraticCurveTo(midX, startY, midX, endPos.y);
-          ctx.lineTo(endPos.x - nodeRadius - 2, endPos.y);
+          // Left edge
+          ctx.moveTo(startX - narrowWidth, startY);
+          ctx.quadraticCurveTo(startX - narrowWidth, funnelY, spreadStart, endPos.y - spreadWidth * 2);
+          ctx.quadraticCurveTo(spreadStart + 20, endPos.y, endPos.x - 16, endPos.y);
+          
+          // Right edge back
+          ctx.lineTo(endPos.x - 16, endPos.y + spreadWidth);
+          ctx.quadraticCurveTo(spreadStart + 20, endPos.y + spreadWidth, spreadStart, endPos.y + spreadWidth * 2);
+          ctx.quadraticCurveTo(startX + narrowWidth, funnelY, startX + narrowWidth, startY);
         } else {
-          // Desktop: lines from center spreading to right
-          // Start from video node edge
-          ctx.moveTo(startX + 20, startY);
+          // Desktop horizontal: wide funnel with soft bezier curves
+          const funnelX = spreadStart;
           
-          // Straight horizontal then curve to node (n8n elbow style)
-          const elbowX = startX + (endPos.x - startX) * 0.4;
-          ctx.lineTo(elbowX, startY);
-          ctx.quadraticCurveTo(elbowX + 20, startY, elbowX + 20, endPos.y);
-          ctx.lineTo(endPos.x - nodeRadius - 3, endPos.y);
+          // Top edge - soft curve from center spreading up/down to target
+          ctx.moveTo(startX, startY - narrowWidth);
+          
+          // First soft curve: from video to spread point
+          const controlX1 = startX + (funnelX - startX) * 0.5;
+          const controlY1 = startY + (endPos.y - startY) * 0.3;
+          ctx.quadraticCurveTo(controlX1, startY - narrowWidth, funnelX - 30, endPos.y - spreadWidth * 1.5);
+          
+          // Second soft curve: from spread point to node
+          ctx.quadraticCurveTo(funnelX, endPos.y - spreadWidth, endPos.x - 18, endPos.y - 3);
+          
+          // Bottom edge back
+          ctx.lineTo(endPos.x - 18, endPos.y + 3);
+          ctx.quadraticCurveTo(funnelX, endPos.y + spreadWidth, funnelX - 30, endPos.y + spreadWidth * 1.5);
+          
+          // Back to start
+          const controlX2 = startX + (funnelX - startX) * 0.5;
+          const controlY2 = startY + (endPos.y - startY) * 0.3;
+          ctx.quadraticCurveTo(controlX2, startY + narrowWidth, startX, startY + narrowWidth);
         }
         
-        // Create flowing gradient
+        ctx.closePath();
+
+        // Flowing gradient for energy effect
         const gradient = ctx.createLinearGradient(startX, startY, endPos.x, endPos.y);
-        const offset = (time + i * 0.08) % 1;
-        const glowWidth = 0.2;
+        const offset = (time + i * 0.1) % 1;
+        const glowWidth = 0.15;
         
-        gradient.addColorStop(0, color + '30');
+        gradient.addColorStop(0, color + '20');
         gradient.addColorStop(Math.max(0, offset - glowWidth), color + '50');
         gradient.addColorStop(offset, color);
         gradient.addColorStop(Math.min(1, offset + glowWidth), color + '50');
-        gradient.addColorStop(1, color + '30');
+        gradient.addColorStop(1, color + '25');
 
-        ctx.strokeStyle = gradient;
-        ctx.lineWidth = 3;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        ctx.stroke();
+        ctx.fillStyle = gradient;
+        ctx.fill();
 
-        // Glow effect
+        // Outer glow
         ctx.strokeStyle = color;
-        ctx.lineWidth = 6;
-        ctx.globalAlpha = 0.2;
+        ctx.lineWidth = 1;
+        ctx.globalAlpha = 0.4;
         ctx.stroke();
         ctx.globalAlpha = 1;
 
-        // Connector dot at the end (before icon)
-        ctx.fillStyle = color;
+        // Connector to icon
         ctx.beginPath();
-        ctx.arc(endPos.x - nodeRadius - 3, endPos.y, 3, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.globalAlpha = 0.9;
+        ctx.moveTo(endPos.x - 18, endPos.y);
+        ctx.lineTo(endPos.x - 10, endPos.y);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
       });
 
-      // Draw VIDEO source node (center-left)
-      const pulseRadius = 26 + Math.sin(time * 2.5) * 2;
+      // VIDEO source node
+      const pulseRadius = 28 + Math.sin(time * 2) * 2;
       
-      // Outer glow
-      ctx.globalAlpha = 0.3;
-      const glowGradient = ctx.createRadialGradient(startX, startY, 0, startX, startY, pulseRadius + 8);
+      ctx.globalAlpha = 0.25;
+      const glowGradient = ctx.createRadialGradient(startX, startY, 0, startX, startY, pulseRadius + 10);
       glowGradient.addColorStop(0, '#8B5CF6');
       glowGradient.addColorStop(1, 'transparent');
       ctx.fillStyle = glowGradient;
       ctx.beginPath();
-      ctx.arc(startX, startY, pulseRadius + 8, 0, Math.PI * 2);
+      ctx.arc(startX, startY, pulseRadius + 10, 0, Math.PI * 2);
       ctx.fill();
 
-      // Core circle
       ctx.globalAlpha = 1;
       ctx.fillStyle = 'hsl(220 20% 6%)';
       ctx.beginPath();
-      ctx.arc(startX, startY, 20, 0, Math.PI * 2);
+      ctx.arc(startX, startY, 22, 0, Math.PI * 2);
       ctx.fill();
       
       ctx.strokeStyle = '#8B5CF6';
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      // Inner glow
       ctx.fillStyle = '#8B5CF640';
       ctx.beginPath();
-      ctx.arc(startX, startY, 14, 0, Math.PI * 2);
+      ctx.arc(startX, startY, 15, 0, Math.PI * 2);
       ctx.fill();
 
-      // VIDEO label
       ctx.fillStyle = '#F5F0EB';
-      ctx.font = "600 9px 'Space Grotesk', sans-serif";
+      ctx.font = "600 10px 'Space Grotesk', sans-serif";
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('VIDEO', startX, startY);
@@ -213,29 +232,27 @@ export function ContentFlowVisualization() {
       transition={{ duration: 1, delay: 0.6 }}
       className="mt-12 relative w-full"
     >
-      {/* Canvas for energy flows */}
-      <div className={`relative ${isMobile ? 'h-[480px]' : 'h-[320px]'} w-full max-w-4xl mx-auto`}>
+      {/* Canvas - wider */}
+      <div className={`relative ${isMobile ? 'h-[520px]' : 'h-[380px]'} w-full`}>
         <canvas
           ref={canvasRef}
           className="absolute inset-0 w-full h-full"
         />
 
-        {/* Output nodes - positioned at line endings */}
+        {/* Output nodes */}
         {outputNodes.map((node, i) => {
           const Icon = node.icon;
           const total = outputNodes.length;
-          const availableHeight = isMobile ? 480 * 0.85 : 320 * 0.85;
-          const topMargin = isMobile ? 480 * 0.075 : 320 * 0.075;
-          const spacing = availableHeight / (total - 1);
-          const top = topMargin + i * spacing;
+          const spacing = isMobile ? 520 * 0.8 / (total - 1) : 380 * 0.85 / (total - 1);
+          const startOffset = isMobile ? 520 * 0.1 : 380 * 0.075;
+          const top = startOffset + i * spacing;
           
           return (
             <motion.div
               key={node.id}
               className="absolute flex items-center gap-2"
               style={{ 
-                left: isMobile ? 'auto' : '78%',
-                right: isMobile ? '8%' : 'auto',
+                right: isMobile ? '5%' : '4%',
                 top: `${top}px`,
                 transform: 'translateY(-50%)',
               }}
@@ -243,19 +260,16 @@ export function ContentFlowVisualization() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.4, delay: 0.9 + i * 0.03 }}
             >
-              {/* Icon first */}
               <div 
                 className="flex items-center justify-center w-7 h-7 rounded-full flex-shrink-0"
                 style={{ 
                   backgroundColor: 'hsl(220 18% 10%)',
                   border: `1.5px solid ${node.color}`,
-                  boxShadow: `0 0 10px ${node.color}50`,
+                  boxShadow: `0 0 12px ${node.color}50`,
                 }}
               >
                 <Icon size={13} color={node.color} strokeWidth={1.5} />
               </div>
-              
-              {/* Label to the right of icon */}
               <span 
                 className="text-xs font-medium whitespace-nowrap"
                 style={{ color: '#F5F0EB' }}
