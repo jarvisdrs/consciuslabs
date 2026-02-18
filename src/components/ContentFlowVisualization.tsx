@@ -1,47 +1,24 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  FileText, Mail, Image, 
-  Mic, Smartphone, Briefcase, Newspaper, Target, Video
-} from 'lucide-react';
-
-// Custom X icon component
-function XIcon({ size, color, strokeWidth }: { size: number; color: string; strokeWidth: number }) {
-  return (
-    <svg 
-      width={size} 
-      height={size} 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke={color} 
-      strokeWidth={strokeWidth}
-      strokeLinecap="round" 
-      strokeLinejoin="round"
-    >
-      <path d="M4 4l11.733 16h4.267l-11.733 -16z" />
-      <path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772" />
-    </svg>
-  );
-}
 
 interface OutputNode {
   id: string;
   label: string;
-  icon: React.ElementType;
   color: string;
+  icon: string;
 }
 
 const outputNodes: OutputNode[] = [
-  { id: 'blog', label: 'Blog Post', icon: FileText, color: '#8B5CF6' },
-  { id: 'newsletter', label: 'Newsletter', icon: Mail, color: '#A78BFA' },
-  { id: 'x', label: 'X', icon: XIcon, color: '#E5E5E5' },
-  { id: 'reel', label: 'Reel', icon: Video, color: '#34D399' },
-  { id: 'infografica', label: 'Infografica', icon: Image, color: '#10B981' },
-  { id: 'podcast', label: 'Podcast Clip', icon: Mic, color: '#F59E0B' },
-  { id: 'story', label: 'Story', icon: Smartphone, color: '#EF4444' },
-  { id: 'articolo', label: 'Articolo', icon: Newspaper, color: '#EC4899' },
-  { id: 'linkedin', label: 'LinkedIn', icon: Briefcase, color: '#3B82F6' },
-  { id: 'adcopy', label: 'Ad Copy', icon: Target, color: '#8B5CF6' },
+  { id: 'blog', label: 'Blog', color: '#8B5CF6', icon: 'B' },
+  { id: 'newsletter', label: 'News', color: '#A78BFA', icon: 'N' },
+  { id: 'x', label: 'X', color: '#E5E5E5', icon: '𝕏' },
+  { id: 'reel', label: 'Reel', color: '#34D399', icon: 'R' },
+  { id: 'infografica', label: 'Info', color: '#10B981', icon: 'I' },
+  { id: 'podcast', label: 'Pod', color: '#F59E0B', icon: 'P' },
+  { id: 'story', label: 'Sto', color: '#EF4444', icon: 'S' },
+  { id: 'articolo', label: 'Art', color: '#EC4899', icon: 'A' },
+  { id: 'linkedin', label: 'in', color: '#3B82F6', icon: 'in' },
+  { id: 'adcopy', label: 'Ad', color: '#8B5CF6', icon: 'Ad' },
 ];
 
 export function ContentFlowVisualization() {
@@ -83,24 +60,25 @@ export function ContentFlowVisualization() {
       timeRef.current += 0.008;
       const time = timeRef.current;
 
-      // Layout - positioned to align with icon centers
-      const startX = isMobile ? width * 0.15 : width * 0.12;
+      // Layout
+      const startX = isMobile ? width * 0.15 : width * 0.1;
       const startY = height / 2;
-      const iconCenterX = isMobile ? width * 0.78 : width * 0.85; // Center of icons
-      const iconRadius = isMobile ? 20 : 18;
+      const iconCenterX = isMobile ? width * 0.75 : width * 0.82;
+      const iconRadius = isMobile ? 22 : 20;
 
-      // Calculate node Y positions (evenly distributed)
+      // Calculate node Y positions
       const total = outputNodes.length;
-      const topMargin = height * 0.08;
-      const bottomMargin = height * 0.08;
+      const topMargin = height * 0.06;
+      const bottomMargin = height * 0.06;
       const availableHeight = height - topMargin - bottomMargin;
       const spacing = availableHeight / (total - 1);
 
-      // Draw energy flows to icon centers
+      // Draw energy flows
       outputNodes.forEach((node, i) => {
         const endY = topMargin + i * spacing;
         const color = node.color;
 
+        // Draw flow channel
         ctx.beginPath();
         
         const narrowWidth = isMobile ? 3 : 4;
@@ -109,16 +87,15 @@ export function ContentFlowVisualization() {
         if (isMobile) {
           const midY = (startY + endY) / 2;
           
-          // Flow to the CENTER of the icon
           ctx.moveTo(startX - narrowWidth, startY);
           ctx.bezierCurveTo(
             startX - narrowWidth * 2, midY,
-            iconCenterX - iconRadius, endY - spreadWidth * 2,
-            iconCenterX, endY - spreadWidth
+            iconCenterX - iconRadius * 1.5, endY - spreadWidth * 2,
+            iconCenterX - iconRadius + 2, endY - spreadWidth
           );
-          ctx.lineTo(iconCenterX, endY + spreadWidth);
+          ctx.lineTo(iconCenterX - iconRadius + 2, endY + spreadWidth);
           ctx.bezierCurveTo(
-            iconCenterX - iconRadius, endY + spreadWidth * 2,
+            iconCenterX - iconRadius * 1.5, endY + spreadWidth * 2,
             startX + narrowWidth * 2, midY,
             startX + narrowWidth, startY
           );
@@ -129,9 +106,9 @@ export function ContentFlowVisualization() {
           ctx.bezierCurveTo(
             midX - 60, startY - narrowWidth * 0.5,
             midX + 40, endY - spreadWidth * 2.5,
-            iconCenterX, endY - spreadWidth
+            iconCenterX - iconRadius + 2, endY - spreadWidth
           );
-          ctx.lineTo(iconCenterX, endY + spreadWidth);
+          ctx.lineTo(iconCenterX - iconRadius + 2, endY + spreadWidth);
           ctx.bezierCurveTo(
             midX + 40, endY + spreadWidth * 2.5,
             midX - 60, startY + narrowWidth * 0.5,
@@ -161,25 +138,19 @@ export function ContentFlowVisualization() {
         ctx.globalAlpha = 0.35;
         ctx.stroke();
         ctx.globalAlpha = 1;
-
-        // Connector dot at icon center
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.arc(iconCenterX, endY, 4, 0, Math.PI * 2);
-        ctx.fill();
       });
 
-      // VIDEO source node
-      const videoRadius = isMobile ? 32 : 30;
+      // Draw VIDEO source node
+      const videoRadius = isMobile ? 35 : 32;
       const pulseRadius = videoRadius + 4 + Math.sin(time * 2) * 2;
       
       ctx.globalAlpha = 0.25;
-      const glowGradient = ctx.createRadialGradient(startX, startY, 0, startX, startY, pulseRadius + 8);
+      const glowGradient = ctx.createRadialGradient(startX, startY, 0, startX, startY, pulseRadius + 10);
       glowGradient.addColorStop(0, '#8B5CF6');
       glowGradient.addColorStop(1, 'transparent');
       ctx.fillStyle = glowGradient;
       ctx.beginPath();
-      ctx.arc(startX, startY, pulseRadius + 8, 0, Math.PI * 2);
+      ctx.arc(startX, startY, pulseRadius + 10, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.globalAlpha = 1;
@@ -189,19 +160,50 @@ export function ContentFlowVisualization() {
       ctx.fill();
       
       ctx.strokeStyle = '#8B5CF6';
-      ctx.lineWidth = 2.5;
+      ctx.lineWidth = 3;
       ctx.stroke();
 
-      ctx.fillStyle = '#8B5CF650';
+      ctx.fillStyle = '#8B5CF660';
       ctx.beginPath();
-      ctx.arc(startX, startY, videoRadius - 7, 0, Math.PI * 2);
+      ctx.arc(startX, startY, videoRadius - 8, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = '#F5F0EB';
-      ctx.font = "600 12px 'Space Grotesk', sans-serif";
+      ctx.font = "700 13px 'Space Grotesk', sans-serif";
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('VIDEO', startX, startY);
+
+      // Draw output node icons ATTACHED to flow ends
+      outputNodes.forEach((node, i) => {
+        const endY = topMargin + i * spacing;
+        const color = node.color;
+
+        // Icon circle
+        ctx.fillStyle = 'hsl(220 18% 8%)';
+        ctx.beginPath();
+        ctx.arc(iconCenterX, endY, iconRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 15;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Icon text
+        ctx.fillStyle = color;
+        ctx.font = `700 ${iconRadius * 0.5}px 'Space Grotesk', sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(node.icon, iconCenterX, endY);
+
+        // Label below icon
+        ctx.fillStyle = '#F5F0EB';
+        ctx.font = "500 11px 'Inter', sans-serif";
+        ctx.fillText(node.label, iconCenterX, endY + iconRadius + 14);
+      });
 
       animationRef.current = requestAnimationFrame(animate);
     };
@@ -214,23 +216,14 @@ export function ContentFlowVisualization() {
     };
   }, [isMobile]);
 
-  // Calculate Y position for each node
-  const getNodeY = (i: number, height: number) => {
-    const total = outputNodes.length;
-    const topMargin = height * 0.08;
-    const availableHeight = height - topMargin * 2;
-    const spacing = availableHeight / (total - 1);
-    return topMargin + i * spacing;
-  };
-
-  const containerHeight = isMobile ? 620 : 480;
+  const containerHeight = isMobile ? 640 : 520;
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 1, delay: 0.6 }}
-      className="mt-12 relative w-full pb-12" // Added padding bottom
+      className="mt-12 relative w-full pb-16"
     >
       <div 
         className="relative w-full"
@@ -240,45 +233,6 @@ export function ContentFlowVisualization() {
           ref={canvasRef}
           className="absolute inset-0 w-full h-full block"
         />
-
-        {/* Output nodes - positioned with center aligned to flow end */}
-        {outputNodes.map((node, i) => {
-          const Icon = node.icon;
-          const top = getNodeY(i, containerHeight);
-          
-          return (
-            <motion.div
-              key={node.id}
-              className="absolute flex items-center gap-3"
-              style={{ 
-                right: isMobile ? 'auto' : '8%',
-                left: isMobile ? '78%' : 'auto',
-                top: `${top}px`,
-                transform: 'translate(-50%, -50%)', // Center the element on the point
-              }}
-              initial={{ opacity: 0, x: 15 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.4, delay: 0.9 + i * 0.03 }}
-            >
-              <div 
-                className="flex items-center justify-center w-10 h-10 rounded-full flex-shrink-0"
-                style={{ 
-                  backgroundColor: 'hsl(220 18% 10%)',
-                  border: `2px solid ${node.color}`,
-                  boxShadow: `0 0 15px ${node.color}60`,
-                }}
-              >
-                <Icon size={20} color={node.color} strokeWidth={1.5} />
-              </div>
-              <span 
-                className="text-sm font-medium whitespace-nowrap"
-                style={{ color: '#F5F0EB' }}
-              >
-                {node.label}
-              </span>
-            </motion.div>
-          );
-        })}
       </div>
     </motion.div>
   );
