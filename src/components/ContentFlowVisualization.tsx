@@ -56,8 +56,7 @@ export function ContentFlowVisualization() {
       const height = rect.height;
       
       ctx.clearRect(0, 0, width, height);
-      timeRef.current += 0.05;
-      const pulse = (Math.sin(timeRef.current) + 1) / 2; // 0 to 1
+      timeRef.current += 0.015;
 
       // Layout - wider spread
       const startX = isMobile ? width * 0.12 : width * 0.08;
@@ -71,19 +70,20 @@ export function ContentFlowVisualization() {
       const videoBoxW = isMobile ? 80 : 90;
       const videoBoxH = isMobile ? 50 : 58;
 
-      // Calculate node Y positions
+      // Calculate node Y positions with extra margin to prevent clipping
       const total = outputNodes.length;
-      const topMargin = height * 0.06;
-      const bottomMargin = height * 0.06;
+      const topMargin = height * 0.12; // Increased from 0.06
+      const bottomMargin = height * 0.12; // Increased from 0.06
       const availableHeight = height - topMargin - bottomMargin;
       const spacing = availableHeight / (total - 1);
 
-      // Draw connection lines (thin with pulse glow)
+      // Draw connection lines with flowing glow effect
       outputNodes.forEach((node, i) => {
         const endY = topMargin + i * spacing;
         const color = node.color;
-        const linePulse = 0.5 + (Math.sin(timeRef.current + i * 0.3) + 1) / 4; // 0.5 to 1
+        const flowOffset = (timeRef.current + i * 0.15) % 1;
 
+        // Draw the base line path
         ctx.beginPath();
         
         if (isMobile) {
@@ -104,27 +104,39 @@ export function ContentFlowVisualization() {
           );
         }
         
-        // Thin line with glow pulse
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 1.5;
-        ctx.globalAlpha = 0.4 + linePulse * 0.4;
+        // Create flowing gradient along the line
+        const lineGradient = ctx.createLinearGradient(startX, startY, boxCenterX, endY);
+        const glowWidth = 0.25;
+        
+        // Build gradient with moving glow spot
+        for (let g = 0; g <= 1; g += 0.05) {
+          const distFromGlow = Math.abs(g - flowOffset);
+          const intensity = Math.max(0, 1 - distFromGlow / glowWidth);
+          const alpha = 0.15 + intensity * 0.7;
+          lineGradient.addColorStop(g, color + Math.round(alpha * 255).toString(16).padStart(2, '0'));
+        }
+        
+        ctx.strokeStyle = lineGradient;
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+        
+        // Add glow effect on top
         ctx.shadowColor = color;
-        ctx.shadowBlur = 8 + linePulse * 12;
+        ctx.shadowBlur = 6;
+        ctx.globalAlpha = 0.6;
         ctx.stroke();
         ctx.shadowBlur = 0;
         ctx.globalAlpha = 1;
       });
 
-      // Draw VIDEO source box with pulse glow
-      const videoPulse = 0.8 + (Math.sin(timeRef.current * 0.8) + 1) / 10; // subtle pulse
-      
+      // Draw VIDEO source box - static glow only
       ctx.save();
       ctx.translate(startX, startY);
-      ctx.scale(videoPulse, videoPulse);
       
-      // Glow pulse
+      // Static glow
       ctx.shadowColor = '#8B5CF6';
-      ctx.shadowBlur = 15 + pulse * 15;
+      ctx.shadowBlur = 20;
       
       // Rounded rect background
       ctx.fillStyle = 'hsl(220 20% 6%)';
@@ -132,15 +144,15 @@ export function ContentFlowVisualization() {
       ctx.roundRect(-videoBoxW / 2, -videoBoxH / 2, videoBoxW, videoBoxH, cornerRadius);
       ctx.fill();
       
-      // Border with pulse
+      // Border - static
       ctx.strokeStyle = '#8B5CF6';
-      ctx.lineWidth = 2 + pulse * 1;
+      ctx.lineWidth = 2;
       ctx.stroke();
       
       ctx.shadowBlur = 0;
       
-      // Inner glow
-      ctx.fillStyle = `rgba(139, 92, 246, ${0.3 + pulse * 0.2})`;
+      // Inner glow - static
+      ctx.fillStyle = 'rgba(139, 92, 246, 0.4)';
       ctx.beginPath();
       ctx.roundRect(-videoBoxW / 2 + 3, -videoBoxH / 2 + 3, videoBoxW - 6, videoBoxH - 6, cornerRadius - 3);
       ctx.fill();
@@ -154,19 +166,17 @@ export function ContentFlowVisualization() {
       
       ctx.restore();
 
-      // Draw OUTPUT boxes with individual pulse glow
+      // Draw OUTPUT boxes - static glow only
       outputNodes.forEach((node, i) => {
         const endY = topMargin + i * spacing;
         const color = node.color;
-        const boxPulse = 0.9 + (Math.sin(timeRef.current * 0.6 + i * 0.4) + 1) / 10;
         
         ctx.save();
         ctx.translate(boxCenterX, endY);
-        ctx.scale(boxPulse, boxPulse);
         
-        // Glow pulse
+        // Static glow
         ctx.shadowColor = color;
-        ctx.shadowBlur = 10 + (Math.sin(timeRef.current + i * 0.5) + 1) * 8;
+        ctx.shadowBlur = 15;
         
         // Rounded rect background
         ctx.fillStyle = 'hsl(220 20% 6%)';
@@ -174,16 +184,15 @@ export function ContentFlowVisualization() {
         ctx.roundRect(-boxW / 2, -boxH / 2, boxW, boxH, cornerRadius);
         ctx.fill();
 
-        // Border with pulse
+        // Border - static
         ctx.strokeStyle = color;
         ctx.lineWidth = 1.5;
         ctx.stroke();
         
         ctx.shadowBlur = 0;
 
-        // Inner glow pulse
-        const innerAlpha = 0.25 + (Math.sin(timeRef.current * 0.7 + i * 0.3) + 1) / 4;
-        ctx.fillStyle = color + Math.round(innerAlpha * 255).toString(16).padStart(2, '0');
+        // Inner glow - static
+        ctx.fillStyle = color + '40';
         ctx.beginPath();
         ctx.roundRect(-boxW / 2 + 2, -boxH / 2 + 2, boxW - 4, boxH - 4, cornerRadius - 2);
         ctx.fill();
@@ -209,8 +218,8 @@ export function ContentFlowVisualization() {
     };
   }, [isMobile]);
 
-  // Lower and wider container
-  const containerHeight = isMobile ? 600 : 520;
+  // Larger container area
+  const containerHeight = isMobile ? 720 : 640;
 
   return (
     <motion.div
