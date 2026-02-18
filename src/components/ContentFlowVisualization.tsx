@@ -49,7 +49,6 @@ export function ContentFlowVisualization() {
   const animationRef = useRef<number>(0);
   const [isMobile, setIsMobile] = useState(false);
   const timeRef = useRef(0);
-  const nodePositionsRef = useRef<Array<{ y: number }>>([]);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -57,19 +56,6 @@ export function ContentFlowVisualization() {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-
-  // Calculate node positions (shared between canvas and DOM)
-  const calculateNodePositions = (height: number) => {
-    const total = outputNodes.length;
-    const topMargin = height * 0.08;
-    const bottomMargin = height * 0.08;
-    const availableHeight = height - topMargin - bottomMargin;
-    const spacing = availableHeight / (total - 1);
-    
-    return outputNodes.map((_, i) => ({
-      y: topMargin + i * spacing,
-    }));
-  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -84,9 +70,6 @@ export function ContentFlowVisualization() {
       canvas.width = rect.width * dpr;
       canvas.height = rect.height * dpr;
       ctx.scale(dpr, dpr);
-      
-      // Update node positions
-      nodePositionsRef.current = calculateNodePositions(rect.height);
     };
     resize();
     window.addEventListener('resize', resize);
@@ -100,20 +83,22 @@ export function ContentFlowVisualization() {
       timeRef.current += 0.008;
       const time = timeRef.current;
 
-      // Layout
-      const startX = isMobile ? width * 0.12 : width * 0.08;
+      // Layout - positioned to align with icon centers
+      const startX = isMobile ? width * 0.15 : width * 0.12;
       const startY = height / 2;
-      const endX = isMobile ? width * 0.82 : width * 0.88;
+      const iconCenterX = isMobile ? width * 0.78 : width * 0.85; // Center of icons
       const iconRadius = isMobile ? 20 : 18;
 
-      // Get node positions
-      const nodePositions = nodePositionsRef.current.length > 0 
-        ? nodePositionsRef.current 
-        : calculateNodePositions(height);
+      // Calculate node Y positions (evenly distributed)
+      const total = outputNodes.length;
+      const topMargin = height * 0.08;
+      const bottomMargin = height * 0.08;
+      const availableHeight = height - topMargin - bottomMargin;
+      const spacing = availableHeight / (total - 1);
 
-      // Draw energy flows
+      // Draw energy flows to icon centers
       outputNodes.forEach((node, i) => {
-        const endY = nodePositions[i]?.y ?? (height * 0.1 + i * height * 0.08);
+        const endY = topMargin + i * spacing;
         const color = node.color;
 
         ctx.beginPath();
@@ -124,28 +109,29 @@ export function ContentFlowVisualization() {
         if (isMobile) {
           const midY = (startY + endY) / 2;
           
+          // Flow to the CENTER of the icon
           ctx.moveTo(startX - narrowWidth, startY);
           ctx.bezierCurveTo(
             startX - narrowWidth * 2, midY,
-            endX - iconRadius * 2, endY - spreadWidth * 2,
-            endX - iconRadius - 2, endY - spreadWidth
+            iconCenterX - iconRadius, endY - spreadWidth * 2,
+            iconCenterX, endY - spreadWidth
           );
-          ctx.lineTo(endX - iconRadius - 2, endY + spreadWidth);
+          ctx.lineTo(iconCenterX, endY + spreadWidth);
           ctx.bezierCurveTo(
-            endX - iconRadius * 2, endY + spreadWidth * 2,
+            iconCenterX - iconRadius, endY + spreadWidth * 2,
             startX + narrowWidth * 2, midY,
             startX + narrowWidth, startY
           );
         } else {
-          const midX = (startX + endX) / 2;
+          const midX = (startX + iconCenterX) / 2;
           
           ctx.moveTo(startX, startY - narrowWidth);
           ctx.bezierCurveTo(
             midX - 60, startY - narrowWidth * 0.5,
             midX + 40, endY - spreadWidth * 2.5,
-            endX - iconRadius - 4, endY - spreadWidth
+            iconCenterX, endY - spreadWidth
           );
-          ctx.lineTo(endX - iconRadius - 4, endY + spreadWidth);
+          ctx.lineTo(iconCenterX, endY + spreadWidth);
           ctx.bezierCurveTo(
             midX + 40, endY + spreadWidth * 2.5,
             midX - 60, startY + narrowWidth * 0.5,
@@ -156,7 +142,7 @@ export function ContentFlowVisualization() {
         ctx.closePath();
 
         // Flowing gradient
-        const gradient = ctx.createLinearGradient(startX, startY, endX, endY);
+        const gradient = ctx.createLinearGradient(startX, startY, iconCenterX, endY);
         const offset = (time + i * 0.1) % 1;
         const glowWidth = 0.15;
         
@@ -176,26 +162,15 @@ export function ContentFlowVisualization() {
         ctx.stroke();
         ctx.globalAlpha = 1;
 
-        // Connector to icon
-        ctx.beginPath();
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 2.5;
-        ctx.globalAlpha = 0.9;
-        const flowEndX = endX - iconRadius - 4;
-        ctx.moveTo(flowEndX, endY);
-        ctx.lineTo(endX - iconRadius + 2, endY);
-        ctx.stroke();
-        ctx.globalAlpha = 1;
-        
-        // Connector dot
+        // Connector dot at icon center
         ctx.fillStyle = color;
         ctx.beginPath();
-        ctx.arc(endX - iconRadius + 2, endY, 3.5, 0, Math.PI * 2);
+        ctx.arc(iconCenterX, endY, 4, 0, Math.PI * 2);
         ctx.fill();
       });
 
-      // VIDEO source node - larger
-      const videoRadius = isMobile ? 30 : 28;
+      // VIDEO source node
+      const videoRadius = isMobile ? 32 : 30;
       const pulseRadius = videoRadius + 4 + Math.sin(time * 2) * 2;
       
       ctx.globalAlpha = 0.25;
@@ -223,7 +198,7 @@ export function ContentFlowVisualization() {
       ctx.fill();
 
       ctx.fillStyle = '#F5F0EB';
-      ctx.font = "600 11px 'Space Grotesk', sans-serif";
+      ctx.font = "600 12px 'Space Grotesk', sans-serif";
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('VIDEO', startX, startY);
@@ -239,51 +214,52 @@ export function ContentFlowVisualization() {
     };
   }, [isMobile]);
 
-  // Calculate positions for DOM nodes (same formula as canvas)
-  const getNodeStyle = (i: number): React.CSSProperties => {
-    const height = isMobile ? 600 : 450; // Match container height
-    const positions = calculateNodePositions(height);
-    const pos = positions[i];
-    
-    return {
-      position: 'absolute',
-      right: isMobile ? '8%' : '8%',
-      top: `${pos.y}px`,
-      transform: 'translateY(-50%)',
-    };
+  // Calculate Y position for each node
+  const getNodeY = (i: number, height: number) => {
+    const total = outputNodes.length;
+    const topMargin = height * 0.08;
+    const availableHeight = height - topMargin * 2;
+    const spacing = availableHeight / (total - 1);
+    return topMargin + i * spacing;
   };
+
+  const containerHeight = isMobile ? 620 : 480;
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 1, delay: 0.6 }}
-      className="mt-12 relative w-full"
+      className="mt-12 relative w-full pb-12" // Added padding bottom
     >
-      {/* TALLER container for more vertical space */}
       <div 
         className="relative w-full"
-        style={{ height: isMobile ? '600px' : '450px' }}
+        style={{ height: `${containerHeight}px` }}
       >
         <canvas
           ref={canvasRef}
           className="absolute inset-0 w-full h-full block"
         />
 
-        {/* Output nodes - perfectly aligned with canvas flows */}
+        {/* Output nodes - positioned with center aligned to flow end */}
         {outputNodes.map((node, i) => {
           const Icon = node.icon;
+          const top = getNodeY(i, containerHeight);
           
           return (
             <motion.div
               key={node.id}
-              className="flex items-center gap-3"
-              style={getNodeStyle(i)}
+              className="absolute flex items-center gap-3"
+              style={{ 
+                right: isMobile ? 'auto' : '8%',
+                left: isMobile ? '78%' : 'auto',
+                top: `${top}px`,
+                transform: 'translate(-50%, -50%)', // Center the element on the point
+              }}
               initial={{ opacity: 0, x: 15 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.4, delay: 0.9 + i * 0.03 }}
             >
-              {/* Larger icon */}
               <div 
                 className="flex items-center justify-center w-10 h-10 rounded-full flex-shrink-0"
                 style={{ 
