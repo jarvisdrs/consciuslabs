@@ -1,24 +1,47 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
+import { 
+  FileText, Mail, Image, 
+  Mic, Smartphone, Briefcase, Newspaper, Target, Video
+} from 'lucide-react';
+
+// Custom X icon component
+function XIcon({ size, color, strokeWidth }: { size: number; color: string; strokeWidth: number }) {
+  return (
+    <svg 
+      width={size} 
+      height={size} 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke={color} 
+      strokeWidth={strokeWidth}
+      strokeLinecap="round" 
+      strokeLinejoin="round"
+    >
+      <path d="M4 4l11.733 16h4.267l-11.733 -16z" />
+      <path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772" />
+    </svg>
+  );
+}
 
 interface OutputNode {
   id: string;
   label: string;
+  icon: React.ElementType;
   color: string;
-  iconLetter: string;
 }
 
 const outputNodes: OutputNode[] = [
-  { id: 'blog', label: 'Blog Post', color: '#8B5CF6', iconLetter: 'B' },
-  { id: 'newsletter', label: 'Newsletter', color: '#A78BFA', iconLetter: 'N' },
-  { id: 'x', label: 'X', color: '#E5E5E5', iconLetter: '𝕏' },
-  { id: 'reel', label: 'Reel', color: '#34D399', iconLetter: 'R' },
-  { id: 'infografica', label: 'Infografica', color: '#10B981', iconLetter: 'I' },
-  { id: 'podcast', label: 'Podcast', color: '#F59E0B', iconLetter: 'P' },
-  { id: 'story', label: 'Story', color: '#EF4444', iconLetter: 'S' },
-  { id: 'articolo', label: 'Articolo', color: '#EC4899', iconLetter: 'A' },
-  { id: 'linkedin', label: 'LinkedIn', color: '#3B82F6', iconLetter: 'in' },
-  { id: 'adcopy', label: 'Ad Copy', color: '#8B5CF6', iconLetter: 'Ad' },
+  { id: 'blog', label: 'Blog Post', icon: FileText, color: '#8B5CF6' },
+  { id: 'newsletter', label: 'Newsletter', icon: Mail, color: '#A78BFA' },
+  { id: 'x', label: 'X', icon: XIcon, color: '#E5E5E5' },
+  { id: 'reel', label: 'Reel', icon: Video, color: '#34D399' },
+  { id: 'infografica', label: 'Infografica', icon: Image, color: '#10B981' },
+  { id: 'podcast', label: 'Podcast Clip', icon: Mic, color: '#F59E0B' },
+  { id: 'story', label: 'Story', icon: Smartphone, color: '#EF4444' },
+  { id: 'articolo', label: 'Articolo', icon: Newspaper, color: '#EC4899' },
+  { id: 'linkedin', label: 'LinkedIn', icon: Briefcase, color: '#3B82F6' },
+  { id: 'adcopy', label: 'Ad Copy', icon: Target, color: '#8B5CF6' },
 ];
 
 export function ContentFlowVisualization() {
@@ -60,7 +83,7 @@ export function ContentFlowVisualization() {
       timeRef.current += 0.008;
       const time = timeRef.current;
 
-      // Layout
+      // Layout - SAME as before
       const startX = isMobile ? width * 0.18 : width * 0.12;
       const startY = height / 2;
       const iconCenterX = isMobile ? width * 0.72 : width * 0.78;
@@ -176,7 +199,7 @@ export function ContentFlowVisualization() {
       ctx.textBaseline = 'middle';
       ctx.fillText('VIDEO', startX, startY);
 
-      // Draw OUTPUT nodes (right side) - SAME STYLE as VIDEO node
+      // Draw OUTPUT node CIRCLES only (right side) - icons will be HTML positioned on top
       outputNodes.forEach((node, i) => {
         const endY = topMargin + i * spacing;
         const color = node.color;
@@ -212,20 +235,6 @@ export function ContentFlowVisualization() {
         ctx.beginPath();
         ctx.arc(iconCenterX, endY, iconRadius - 6, 0, Math.PI * 2);
         ctx.fill();
-
-        // Icon letter
-        ctx.fillStyle = color;
-        ctx.font = `700 ${iconRadius * 0.5}px 'Space Grotesk', sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(node.iconLetter, iconCenterX, endY);
-
-        // Label to the right
-        ctx.fillStyle = '#F5F0EB';
-        ctx.font = "500 12px 'Inter', sans-serif";
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(node.label, iconCenterX + iconRadius + 12, endY);
       });
 
       animationRef.current = requestAnimationFrame(animate);
@@ -239,6 +248,23 @@ export function ContentFlowVisualization() {
     };
   }, [isMobile]);
 
+  // Calculate Y positions - MUST MATCH canvas exactly
+  const getNodePositions = () => {
+    const height = isMobile ? 620 : 500;
+    const total = outputNodes.length;
+    const topMargin = height * 0.04;
+    const bottomMargin = height * 0.04;
+    const availableHeight = height - topMargin - bottomMargin;
+    const spacing = availableHeight / (total - 1);
+    const iconCenterX = isMobile ? '72%' : '78%';
+    
+    return outputNodes.map((_, i) => ({
+      top: topMargin + i * spacing,
+      left: iconCenterX,
+    }));
+  };
+
+  const positions = getNodePositions();
   const containerHeight = isMobile ? 620 : 500;
 
   return (
@@ -256,6 +282,40 @@ export function ContentFlowVisualization() {
           ref={canvasRef}
           className="absolute inset-0 w-full h-full block"
         />
+
+        {/* Lucide icons positioned exactly over canvas circles */}
+        {outputNodes.map((node, i) => {
+          const Icon = node.icon;
+          const pos = positions[i];
+          
+          return (
+            <motion.div
+              key={node.id}
+              className="absolute flex items-center gap-3 pointer-events-none"
+              style={{ 
+                left: pos.left,
+                top: `${pos.top}px`,
+                transform: 'translate(-50%, -50%)',
+              }}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4, delay: 0.9 + i * 0.03 }}
+            >
+              {/* Icon centered in the circle */}
+              <div className="w-11 h-11 flex items-center justify-center">
+                <Icon size={20} color={node.color} strokeWidth={1.5} />
+              </div>
+              
+              {/* Label to the right */}
+              <span 
+                className="text-sm font-medium whitespace-nowrap"
+                style={{ color: '#F5F0EB' }}
+              >
+                {node.label}
+              </span>
+            </motion.div>
+          );
+        })}
       </div>
     </motion.div>
   );
