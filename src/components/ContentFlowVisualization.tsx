@@ -22,9 +22,7 @@ const outputNodes: OutputNode[] = [
 
 export function ContentFlowVisualization() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number>(0);
   const [isMobile, setIsMobile] = useState(false);
-  const timeRef = useRef(0);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -40,24 +38,17 @@ export function ContentFlowVisualization() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const resize = () => {
+    const draw = () => {
       const dpr = window.devicePixelRatio || 1;
       const rect = canvas.getBoundingClientRect();
       canvas.width = rect.width * dpr;
       canvas.height = rect.height * dpr;
       ctx.scale(dpr, dpr);
-    };
-    resize();
-    window.addEventListener('resize', resize);
 
-    const animate = () => {
-      const rect = canvas.getBoundingClientRect();
       const width = rect.width;
       const height = rect.height;
       
       ctx.clearRect(0, 0, width, height);
-      timeRef.current += 0.008;
-      const time = timeRef.current;
 
       // Layout
       const startX = isMobile ? width * 0.18 : width * 0.12;
@@ -65,11 +56,11 @@ export function ContentFlowVisualization() {
       const boxCenterX = isMobile ? width * 0.72 : width * 0.78;
       
       // Box dimensions (rounded rectangles)
-      const boxW = isMobile ? 75 : 85;       // Output boxes - compact
-      const boxH = isMobile ? 32 : 36;       // Output boxes - compact
+      const boxW = isMobile ? 75 : 85;
+      const boxH = isMobile ? 32 : 36;
       const cornerRadius = 12;
-      const videoBoxW = isMobile ? 85 : 95;  // VIDEO box - larger
-      const videoBoxH = isMobile ? 55 : 62;  // VIDEO box - larger
+      const videoBoxW = isMobile ? 85 : 95;
+      const videoBoxH = isMobile ? 55 : 62;
 
       // Calculate node Y positions
       const total = outputNodes.length;
@@ -78,7 +69,7 @@ export function ContentFlowVisualization() {
       const availableHeight = height - topMargin - bottomMargin;
       const spacing = availableHeight / (total - 1);
 
-      // Draw energy flows
+      // Draw energy flows (static with glow effect)
       outputNodes.forEach((node, i) => {
         const endY = topMargin + i * spacing;
         const color = node.color;
@@ -121,38 +112,30 @@ export function ContentFlowVisualization() {
         
         ctx.closePath();
 
-        // Flowing gradient
+        // Static gradient
         const gradient = ctx.createLinearGradient(startX, startY, boxCenterX, endY);
-        const offset = (time + i * 0.1) % 1;
-        const glowWidth = 0.15;
-        
-        gradient.addColorStop(0, color + '20');
-        gradient.addColorStop(Math.max(0, offset - glowWidth), color + '45');
-        gradient.addColorStop(offset, color);
-        gradient.addColorStop(Math.min(1, offset + glowWidth), color + '45');
-        gradient.addColorStop(1, color + '25');
+        gradient.addColorStop(0, color + '15');
+        gradient.addColorStop(0.5, color + '40');
+        gradient.addColorStop(1, color + '15');
 
         ctx.fillStyle = gradient;
         ctx.fill();
 
-        // Outline
+        // Glow outline
         ctx.strokeStyle = color;
-        ctx.lineWidth = 0.5;
-        ctx.globalAlpha = 0.35;
+        ctx.lineWidth = 1;
+        ctx.globalAlpha = 0.5;
         ctx.stroke();
         ctx.globalAlpha = 1;
       });
 
       // Draw VIDEO source box (left side) - Rounded Rectangle
-      const videoPulse = 1 + Math.sin(time * 2) * 0.03;
-      
       ctx.save();
       ctx.translate(startX, startY);
-      ctx.scale(videoPulse, videoPulse);
       
       // Glow
       ctx.shadowColor = '#8B5CF6';
-      ctx.shadowBlur = 25;
+      ctx.shadowBlur = 30;
       
       // Rounded rect background
       ctx.fillStyle = 'hsl(220 20% 6%)';
@@ -173,7 +156,7 @@ export function ContentFlowVisualization() {
       ctx.roundRect(-videoBoxW / 2 + 4, -videoBoxH / 2 + 4, videoBoxW - 8, videoBoxH - 8, cornerRadius - 4);
       ctx.fill();
       
-      // Text - slightly larger for bigger box
+      // Text
       ctx.fillStyle = '#F5F0EB';
       ctx.font = "700 14px 'Space Grotesk', sans-serif";
       ctx.textAlign = 'center';
@@ -186,11 +169,9 @@ export function ContentFlowVisualization() {
       outputNodes.forEach((node, i) => {
         const endY = topMargin + i * spacing;
         const color = node.color;
-        const pulse = 1 + Math.sin(time * 2 + i * 0.3) * 0.02;
         
         ctx.save();
         ctx.translate(boxCenterX, endY);
-        ctx.scale(pulse, pulse);
         
         // Glow
         ctx.shadowColor = color;
@@ -215,7 +196,7 @@ export function ContentFlowVisualization() {
         ctx.roundRect(-boxW / 2 + 3, -boxH / 2 + 3, boxW - 6, boxH - 6, cornerRadius - 3);
         ctx.fill();
 
-        // FULL LABEL inside box (no letter, no external label)
+        // FULL LABEL inside box
         ctx.fillStyle = '#F5F0EB';
         ctx.font = `600 ${boxH * 0.36}px 'Space Grotesk', sans-serif`;
         ctx.textAlign = 'center';
@@ -224,20 +205,17 @@ export function ContentFlowVisualization() {
         
         ctx.restore();
       });
-
-      animationRef.current = requestAnimationFrame(animate);
     };
 
-    animate();
+    draw();
 
-    return () => {
-      window.removeEventListener('resize', resize);
-      cancelAnimationFrame(animationRef.current);
-    };
+    const handleResize = () => draw();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [isMobile]);
 
-  // TALLER container
-  const containerHeight = isMobile ? 680 : 560;
+  // MUCH TALLER container for bigger visualization
+  const containerHeight = isMobile ? 800 : 720;
 
   return (
     <motion.div
@@ -247,7 +225,7 @@ export function ContentFlowVisualization() {
       className="mt-12 relative w-full pb-20"
     >
       <div 
-        className="relative w-full"
+        className="relative w-full pulse-glow-lines"
         style={{ height: `${containerHeight}px` }}
       >
         <canvas
@@ -255,6 +233,26 @@ export function ContentFlowVisualization() {
           className="absolute inset-0 w-full h-full block"
         />
       </div>
+      <style>{`
+        .pulse-glow-lines {
+          position: relative;
+        }
+        .pulse-glow-lines::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(ellipse at 30% 50%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
+                      radial-gradient(ellipse at 70% 20%, rgba(52, 211, 153, 0.06) 0%, transparent 40%),
+                      radial-gradient(ellipse at 70% 80%, rgba(245, 158, 11, 0.06) 0%, transparent 40%);
+          animation: pulseGlow 4s ease-in-out infinite;
+          pointer-events: none;
+          z-index: 1;
+        }
+        @keyframes pulseGlow {
+          0%, 100% { opacity: 0.6; }
+          50% { opacity: 1; }
+        }
+      `}</style>
     </motion.div>
   );
 }
