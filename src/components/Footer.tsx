@@ -30,7 +30,7 @@ export function Footer() {
   const [subscribed, setSubscribed] = useState(false);
 
   return (
-    <footer className="border-t border-border pt-16 pb-8">
+    <footer className="bg-total-black border-t border-border pt-16 pb-8">
       <div className="container px-4 mx-auto">
         <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-10 mb-12">
           {/* Brand */}

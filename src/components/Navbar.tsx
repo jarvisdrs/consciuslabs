@@ -23,7 +23,7 @@ export function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 glass">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-total-black border-b border-border/20">
       <div className="container flex items-center justify-between h-16 px-4 mx-auto">
         <Link 
           to="/" 
@@ -74,7 +74,7 @@ export function Navbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden glass border-t border-border"
+            className="md:hidden bg-total-black border-t border-border"
           >
             <div className="flex flex-col gap-4 p-4">
               {navItems.map((item) => (
