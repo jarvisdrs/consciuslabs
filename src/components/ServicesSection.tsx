@@ -5,8 +5,8 @@ const services = [
   {
     icon: Layers,
     title: "Content Multiplication",
-    description: "Da 1 contenuto a 20+ formati diversi. Ogni asset è ottimizzato per il canale di destinazione.",
-    stat: "20+",
+    description: "Da 1 contenuto a 10 formati in infinite versioni. Ogni asset è ottimizzato per il canale di destinazione.",
+    stat: "10",
     statLabel: "Formati",
   },
   {

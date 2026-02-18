@@ -45,7 +45,7 @@ export function HeroSection() {
             transition={{ duration: 0.7, delay: 0.2 }}
             className="text-lg sm:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto"
           >
-            Trasformiamo un singolo contenuto in decine di asset ottimizzati grazie a flussi di automazione intelligenti
+            Trasformiamo un singolo video in contenuti
           </motion.p>
 
           <motion.div
@@ -54,20 +54,15 @@ export function HeroSection() {
             transition={{ duration: 0.7, delay: 0.3 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
-            <Button variant="hero" size="lg" asChild>
-              <a href="/preventivo">
-                Scopri i piani
-                <ArrowRight className="ml-2" size={18} />
-              </a>
-            </Button>
-            <Button variant="hero-outline" size="lg" onClick={() => scrollTo("casi-studio")}>
-              Vedi i risultati
+            <Button variant="hero" size="lg" onClick={() => scrollTo("come-funziona")}>
+              Scopri come funziona
+              <ArrowRight className="ml-2" size={18} />
             </Button>
           </motion.div>
         </div>
 
         {/* Content Flow Visualization */}
-        <div id="casi-studio">
+        <div className="pt-20">
           <ContentFlowVisualization />
         </div>
       </div>

@@ -21,8 +21,8 @@ const piani = [
   { 
     id: "starter",
     nome: "STARTER", 
-    prezzo: "€297",
-    prezzoAnnuale: "€237",
+    prezzo: "€147",
+    prezzoAnnuale: "€118",
     descrizione: "2 video → 15 contenuti",
     target: "Freelancer, test",
     popular: false,
@@ -31,8 +31,8 @@ const piani = [
   { 
     id: "professional",
     nome: "PROFESSIONAL", 
-    prezzo: "€497",
-    prezzoAnnuale: "€397",
+    prezzo: "€247",
+    prezzoAnnuale: "€198",
     descrizione: "4 video → 30 contenuti",
     target: "Coach, creator B2B",
     popular: true,
@@ -41,8 +41,8 @@ const piani = [
   { 
     id: "business",
     nome: "BUSINESS", 
-    prezzo: "€997",
-    prezzoAnnuale: "€797",
+    prezzo: "€447",
+    prezzoAnnuale: "€358",
     descrizione: "8 video → 50+ contenuti",
     target: "Agenzie, team",
     popular: false,
@@ -81,7 +81,7 @@ export default function Preventivo() {
               Scegli il tuo <span className="text-gradient">Piano</span>
             </h1>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Inizia a moltiplicare i tuoi contenuti. Sconto del 50% sul primo mese per i primi 10 clienti.
+              Inizia a moltiplicare i tuoi contenuti. Scegli il piano più adatto alle tue esigenze.
             </p>
           </div>
 
@@ -113,28 +113,6 @@ export default function Preventivo() {
               </button>
             </div>
           </div>
-
-          {/* Promo Banner */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="mb-12 p-6 rounded-2xl bg-gradient-to-r from-accent/20 via-primary/20 to-accent/20 border border-accent/30"
-          >
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <Sparkles className="w-8 h-8 text-accent" />
-                <div>
-                  <h3 className="font-semibold text-lg">🚀 Programma Founders — 50% OFF</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Primi 10 clienti: 50% di sconto sul primo mese. Prezzo bloccato per sempre.
-                  </p>
-                </div>
-              </div>
-              <Badge className="bg-accent text-accent-foreground px-4 py-2 text-lg">
-                Solo 10 posti!
-              </Badge>
-            </div>
-          </motion.div>
 
           {/* Piani */}
           <div className="grid md:grid-cols-3 gap-6 mb-12">
@@ -224,15 +202,15 @@ export default function Preventivo() {
               </div>
               <div className="grid md:grid-cols-3 gap-4 text-center">
                 <div className="p-4 rounded-lg bg-background">
-                  <p className="text-2xl font-bold text-gradient">€720</p>
+                  <p className="text-2xl font-bold text-gradient">€348</p>
                   <p className="text-xs text-muted-foreground">Risparmio su Starter</p>
                 </div>
                 <div className="p-4 rounded-lg bg-background border border-accent/30">
-                  <p className="text-2xl font-bold text-gradient">€1.200</p>
+                  <p className="text-2xl font-bold text-gradient">€588</p>
                   <p className="text-xs text-muted-foreground">Risparmio su Professional</p>
                 </div>
                 <div className="p-4 rounded-lg bg-background">
-                  <p className="text-2xl font-bold text-gradient">€2.400</p>
+                  <p className="text-2xl font-bold text-gradient">€1.068</p>
                   <p className="text-xs text-muted-foreground">Risparmio su Business</p>
                 </div>
               </div>

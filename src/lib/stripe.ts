@@ -12,18 +12,19 @@ export const getStripe = () => {
 };
 
 // Price IDs da configurare in Stripe Dashboard
+// NOTA: Questi price ID devono essere aggiornati su Stripe Dashboard con i nuovi prezzi
 export const STRIPE_PRICES = {
   starter: {
-    monthly: 'price_1T1X4QD5yldKuDg6jLqeCOjg',    // €297
-    annual: 'price_1T1a2wD5yldKuDg65lFIQvsP',      // €237
+    monthly: 'price_1T1X4QD5yldKuDg6jLqeCOjg',    // €147 (da aggiornare su Stripe)
+    annual: 'price_1T1a2wD5yldKuDg65lFIQvsP',      // €118 (da aggiornare su Stripe)
   },
   professional: {
-    monthly: 'price_1T1X4xD5yldKuDg6Csy0vbMf',        // €497
-    annual: 'price_1T1a2WD5yldKuDg6kBaVPHUu',          // €397
+    monthly: 'price_1T1X4xD5yldKuDg6Csy0vbMf',        // €247 (da aggiornare su Stripe)
+    annual: 'price_1T1a2WD5yldKuDg6kBaVPHUu',          // €198 (da aggiornare su Stripe)
   },
   business: {
-    monthly: 'price_1T1X5LD5yldKuDg6qvGVFBD5',   // €997
-    annual: 'price_1T1a2DD5yldKuDg60eDNa5oO',     // €797
+    monthly: 'price_1T1X5LD5yldKuDg6qvGVFBD5',   // €447 (da aggiornare su Stripe)
+    annual: 'price_1T1a2DD5yldKuDg60eDNa5oO',     // €358 (da aggiornare su Stripe)
   },
 };
 
@@ -37,20 +38,20 @@ export const getPriceId = (plan: PlanType, cycle: BillingCycle): string => {
 export const PLAN_DETAILS = {
   starter: {
     name: 'Starter',
-    monthly: 297,
-    annual: 237,
+    monthly: 147,
+    annual: 118,
     description: '2 asset → 15 formati',
   },
   professional: {
     name: 'Professional',
-    monthly: 497,
-    annual: 397,
+    monthly: 247,
+    annual: 198,
     description: '4 asset → 30 formati',
   },
   business: {
     name: 'Business',
-    monthly: 997,
-    annual: 797,
+    monthly: 447,
+    annual: 358,
     description: '8 asset → 50+ formati',
   },
 };
