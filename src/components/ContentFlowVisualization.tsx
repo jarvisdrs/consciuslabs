@@ -5,20 +5,19 @@ interface OutputNode {
   id: string;
   label: string;
   color: string;
-  iconLetter: string;
 }
 
 const outputNodes: OutputNode[] = [
-  { id: 'blog', label: 'Blog Post', color: '#8B5CF6', iconLetter: 'B' },
-  { id: 'newsletter', label: 'Newsletter', color: '#A78BFA', iconLetter: 'N' },
-  { id: 'x', label: 'X', color: '#E5E5E5', iconLetter: '𝕏' },
-  { id: 'reel', label: 'Reel', color: '#34D399', iconLetter: 'R' },
-  { id: 'infografica', label: 'Infografica', color: '#10B981', iconLetter: 'I' },
-  { id: 'podcast', label: 'Podcast', color: '#F59E0B', iconLetter: 'P' },
-  { id: 'story', label: 'Story', color: '#EF4444', iconLetter: 'S' },
-  { id: 'articolo', label: 'Articolo', color: '#EC4899', iconLetter: 'A' },
-  { id: 'linkedin', label: 'LinkedIn', color: '#3B82F6', iconLetter: 'in' },
-  { id: 'adcopy', label: 'Ad Copy', color: '#8B5CF6', iconLetter: 'Ad' },
+  { id: 'blog', label: 'Blog', color: '#8B5CF6' },
+  { id: 'newsletter', label: 'News', color: '#A78BFA' },
+  { id: 'x', label: 'X', color: '#E5E5E5' },
+  { id: 'reel', label: 'Reel', color: '#34D399' },
+  { id: 'infografica', label: 'Info', color: '#10B981' },
+  { id: 'podcast', label: 'Podcast', color: '#F59E0B' },
+  { id: 'story', label: 'Story', color: '#EF4444' },
+  { id: 'articolo', label: 'Articolo', color: '#EC4899' },
+  { id: 'linkedin', label: 'LinkedIn', color: '#3B82F6' },
+  { id: 'adcopy', label: 'Ad Copy', color: '#8B5CF6' },
 ];
 
 export function ContentFlowVisualization() {
@@ -61,10 +60,10 @@ export function ContentFlowVisualization() {
       const time = timeRef.current;
 
       // Layout
-      const startX = isMobile ? width * 0.18 : width * 0.12;
+      const startX = isMobile ? width * 0.15 : width * 0.1;
       const startY = height / 2;
-      const iconCenterX = isMobile ? width * 0.72 : width * 0.78;
-      const iconRadius = isMobile ? 22 : 24;
+      const iconCenterX = isMobile ? width * 0.5 : width * 0.55;
+      const iconRadius = isMobile ? 38 : 42; // LARGER circles for full labels
       const videoRadius = isMobile ? 32 : 34;
 
       // Calculate node Y positions
@@ -176,7 +175,7 @@ export function ContentFlowVisualization() {
       ctx.textBaseline = 'middle';
       ctx.fillText('VIDEO', startX, startY);
 
-      // Draw OUTPUT nodes (right side) - SAME STYLE as VIDEO node
+      // Draw OUTPUT nodes (right side) - CIRCLES with FULL LABELS inside
       outputNodes.forEach((node, i) => {
         const endY = topMargin + i * spacing;
         const color = node.color;
@@ -192,7 +191,7 @@ export function ContentFlowVisualization() {
         ctx.arc(iconCenterX, endY, pulse + 8, 0, Math.PI * 2);
         ctx.fill();
 
-        // Circle background
+        // Circle background - LARGER for text
         ctx.globalAlpha = 1;
         ctx.fillStyle = 'hsl(220 20% 6%)';
         ctx.beginPath();
@@ -213,19 +212,20 @@ export function ContentFlowVisualization() {
         ctx.arc(iconCenterX, endY, iconRadius - 6, 0, Math.PI * 2);
         ctx.fill();
 
-        // Icon letter
-        ctx.fillStyle = color;
-        ctx.font = `700 ${iconRadius * 0.5}px 'Space Grotesk', sans-serif`;
+        // FULL LABEL inside circle - smaller font
+        ctx.fillStyle = '#F5F0EB';
+        ctx.font = `600 ${iconRadius * 0.35}px 'Space Grotesk', sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(node.iconLetter, iconCenterX, endY);
-
-        // Label to the right
-        ctx.fillStyle = '#F5F0EB';
-        ctx.font = "500 12px 'Inter', sans-serif";
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(node.label, iconCenterX + iconRadius + 12, endY);
+        
+        // Split long labels into two lines if needed
+        const words = node.label.split(' ');
+        if (words.length > 1 && node.label.length > 6) {
+          ctx.fillText(words[0], iconCenterX, endY - 5);
+          ctx.fillText(words.slice(1).join(' '), iconCenterX, endY + 5);
+        } else {
+          ctx.fillText(node.label, iconCenterX, endY);
+        }
       });
 
       animationRef.current = requestAnimationFrame(animate);
