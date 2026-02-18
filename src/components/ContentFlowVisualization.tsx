@@ -81,53 +81,136 @@ export function ContentFlowVisualization() {
       outputNodes.forEach((node, i) => {
         const endY = topMargin + i * spacing;
         const color = node.color;
-        const flowOffset = (timeRef.current + i * 0.15) % 1;
+        const flowOffset = (timeRef.current + i * 0.12) % 1.3; // Extended range for box entry effect
 
-        // Draw the base line path
-        ctx.beginPath();
+        // Calculate path points - now extending INTO the box center
+        const startPt = { x: startX + videoBoxW/2, y: startY };
+        const endPt = { x: boxCenterX, y: endY }; // Go to center of output box, not edge
         
+        // Control points for bezier
+        let cp1, cp2;
         if (isMobile) {
           const midY = (startY + endY) / 2;
-          ctx.moveTo(startX + videoBoxW/2, startY);
-          ctx.bezierCurveTo(
-            startX + videoBoxW/2 + 30, startY,
-            boxCenterX - boxW/2 - 30, endY,
-            boxCenterX - boxW/2, endY
-          );
+          cp1 = { x: startX + videoBoxW/2 + 30, y: startY };
+          cp2 = { x: boxCenterX - 30, y: endY };
         } else {
           const midX = (startX + boxCenterX) / 2;
-          ctx.moveTo(startX + videoBoxW/2, startY);
-          ctx.bezierCurveTo(
-            midX - 40, startY,
-            midX + 40, endY,
-            boxCenterX - boxW/2, endY
-          );
+          cp1 = { x: midX - 40, y: startY };
+          cp2 = { x: midX + 40, y: endY };
         }
-        
-        // Create flowing gradient along the line
-        const lineGradient = ctx.createLinearGradient(startX, startY, boxCenterX, endY);
-        const glowWidth = 0.25;
-        
-        // Build gradient with moving glow spot
-        for (let g = 0; g <= 1; g += 0.05) {
-          const distFromGlow = Math.abs(g - flowOffset);
-          const intensity = Math.max(0, 1 - distFromGlow / glowWidth);
-          const alpha = 0.15 + intensity * 0.7;
-          lineGradient.addColorStop(g, color + Math.round(alpha * 255).toString(16).padStart(2, '0'));
-        }
-        
-        ctx.strokeStyle = lineGradient;
-        ctx.lineWidth = 2;
+
+        // Draw base line (very subtle, always visible)
+        ctx.beginPath();
+        ctx.moveTo(startPt.x, startPt.y);
+        ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, endPt.x, endPt.y);
+        ctx.strokeStyle = color + '15';
+        ctx.lineWidth = 1;
         ctx.lineCap = 'round';
         ctx.stroke();
         
-        // Add glow effect on top
-        ctx.shadowColor = color;
-        ctx.shadowBlur = 6;
-        ctx.globalAlpha = 0.6;
+        // Draw flowing line segments with trail effect
+        const trailCount = 5;
+        const trailSpacing = 0.08;
+        
+        for (let t = 0; t < trailCount; t++) {
+          const segmentOffset = (flowOffset - t * trailSpacing) % 1.4;
+          if (segmentOffset < 0 || segmentOffset > 1.2) continue;
+          
+          // Calculate segment start and end points along the bezier
+          const segStartT = Math.max(0, segmentOffset - 0.15);
+          const segEndT = Math.min(1, segmentOffset);
+          
+          // Trail alpha decreases for older segments
+          const trailAlpha = Math.pow(1 - t / trailCount, 1.5) * 0.9;
+          
+          // Draw the flowing line segment
+          ctx.beginPath();
+          
+          // Sample points along the curve for this segment
+          const steps = 15;
+          for (let s = 0; s <= steps; s++) {
+            const tCurve = segStartT + (segEndT - segStartT) * (s / steps);
+            if (tCurve < 0 || tCurve > 1) continue;
+            
+            const mt = 1 - tCurve;
+            const x = mt*mt*mt*startPt.x + 3*mt*mt*tCurve*cp1.x + 3*mt*tCurve*tCurve*cp2.x + tCurve*tCurve*tCurve*endPt.x;
+            const y = mt*mt*mt*startPt.y + 3*mt*mt*tCurve*cp1.y + 3*mt*tCurve*tCurve*cp2.y + tCurve*tCurve*tCurve*endPt.y;
+            
+            if (s === 0) {
+              ctx.moveTo(x, y);
+            } else {
+              ctx.lineTo(x, y);
+            }
+          }
+          
+          // Alpha fades as it enters the box (last 20% = inside box)
+          let finalAlpha = trailAlpha;
+          if (segmentOffset > 0.8) {
+            // Smooth fade-out inside box (0.8 to 1.0)
+            const fadeProgress = (segmentOffset - 0.8) / 0.2;
+            finalAlpha = trailAlpha * (1 - Math.pow(fadeProgress, 0.7));
+          }
+          
+          // Line styling
+          const lineWidth = 2 - t * 0.25; // Thicker at head, thinner at tail
+          ctx.strokeStyle = color + Math.round(finalAlpha * 255).toString(16).padStart(2, '0');
+          ctx.lineWidth = Math.max(0.5, lineWidth);
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          ctx.stroke();
+          
+          // Add glow to leading segments
+          if (t < 2 && finalAlpha > 0.3) {
+            ctx.shadowColor = color;
+            ctx.shadowBlur = 8 - t * 3;
+            ctx.globalAlpha = finalAlpha * 0.6;
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+            ctx.globalAlpha = 1;
+          }
+        }
+        
+        // Draw continuous flowing glow line (subtle background pulse)
+        const glowOffset = (timeRef.current * 0.6 + i * 0.15) % 1.3;
+        ctx.beginPath();
+        
+        for (let s = 0; s <= 50; s++) {
+          const tCurve = s / 50;
+          const mt = 1 - tCurve;
+          const x = mt*mt*mt*startPt.x + 3*mt*mt*tCurve*cp1.x + 3*mt*tCurve*tCurve*cp2.x + tCurve*tCurve*tCurve*endPt.x;
+          const y = mt*mt*mt*startPt.y + 3*mt*mt*tCurve*cp1.y + 3*mt*tCurve*tCurve*cp2.y + tCurve*tCurve*tCurve*endPt.y;
+          
+          if (s === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+        }
+        
+        // Create gradient with moving glow
+        const glowGradient = ctx.createLinearGradient(startPt.x, startPt.y, endPt.x, endPt.y);
+        const glowWidth = 0.25;
+        
+        for (let g = 0; g <= 1; g += 0.02) {
+          const distFromGlow = Math.abs(g - glowOffset);
+          const intensity = Math.max(0, 1 - distFromGlow / glowWidth);
+          
+          // Fade inside box
+          let baseAlpha = 0.05;
+          if (g > 0.8) {
+            const fadeInBox = (g - 0.8) / 0.2;
+            baseAlpha = 0.05 * Math.pow(1 - fadeInBox, 0.5);
+          }
+          
+          const alpha = baseAlpha + intensity * 0.4;
+          const clampedAlpha = Math.max(0, Math.min(1, alpha));
+          glowGradient.addColorStop(g, color + Math.round(clampedAlpha * 255).toString(16).padStart(2, '0'));
+        }
+        
+        ctx.strokeStyle = glowGradient;
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
         ctx.stroke();
-        ctx.shadowBlur = 0;
-        ctx.globalAlpha = 1;
       });
 
       // Draw VIDEO source box - static glow only
