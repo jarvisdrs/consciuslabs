@@ -1,47 +1,24 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  FileText, Mail, Image, 
-  Mic, Smartphone, Briefcase, Newspaper, Target, Video
-} from 'lucide-react';
-
-// Custom X icon component
-function XIcon({ size, color, strokeWidth }: { size: number; color: string; strokeWidth: number }) {
-  return (
-    <svg 
-      width={size} 
-      height={size} 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke={color} 
-      strokeWidth={strokeWidth}
-      strokeLinecap="round" 
-      strokeLinejoin="round"
-    >
-      <path d="M4 4l11.733 16h4.267l-11.733 -16z" />
-      <path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772" />
-    </svg>
-  );
-}
 
 interface OutputNode {
   id: string;
   label: string;
-  icon: React.ElementType;
   color: string;
+  iconLetter: string;
 }
 
 const outputNodes: OutputNode[] = [
-  { id: 'blog', label: 'Blog Post', icon: FileText, color: '#8B5CF6' },
-  { id: 'newsletter', label: 'Newsletter', icon: Mail, color: '#A78BFA' },
-  { id: 'x', label: 'X', icon: XIcon, color: '#E5E5E5' },
-  { id: 'reel', label: 'Reel', icon: Video, color: '#34D399' },
-  { id: 'infografica', label: 'Infografica', icon: Image, color: '#10B981' },
-  { id: 'podcast', label: 'Podcast Clip', icon: Mic, color: '#F59E0B' },
-  { id: 'story', label: 'Story', icon: Smartphone, color: '#EF4444' },
-  { id: 'articolo', label: 'Articolo', icon: Newspaper, color: '#EC4899' },
-  { id: 'linkedin', label: 'LinkedIn', icon: Briefcase, color: '#3B82F6' },
-  { id: 'adcopy', label: 'Ad Copy', icon: Target, color: '#8B5CF6' },
+  { id: 'blog', label: 'Blog Post', color: '#8B5CF6', iconLetter: 'B' },
+  { id: 'newsletter', label: 'Newsletter', color: '#A78BFA', iconLetter: 'N' },
+  { id: 'x', label: 'X', color: '#E5E5E5', iconLetter: '𝕏' },
+  { id: 'reel', label: 'Reel', color: '#34D399', iconLetter: 'R' },
+  { id: 'infografica', label: 'Infografica', color: '#10B981', iconLetter: 'I' },
+  { id: 'podcast', label: 'Podcast', color: '#F59E0B', iconLetter: 'P' },
+  { id: 'story', label: 'Story', color: '#EF4444', iconLetter: 'S' },
+  { id: 'articolo', label: 'Articolo', color: '#EC4899', iconLetter: 'A' },
+  { id: 'linkedin', label: 'LinkedIn', color: '#3B82F6', iconLetter: 'in' },
+  { id: 'adcopy', label: 'Ad Copy', color: '#8B5CF6', iconLetter: 'Ad' },
 ];
 
 export function ContentFlowVisualization() {
@@ -84,19 +61,20 @@ export function ContentFlowVisualization() {
       const time = timeRef.current;
 
       // Layout
-      const startX = isMobile ? width * 0.12 : width * 0.08;
+      const startX = isMobile ? width * 0.18 : width * 0.12;
       const startY = height / 2;
-      const iconCenterX = isMobile ? width * 0.28 : width * 0.35; // Position for icon center
-      const iconRadius = isMobile ? 20 : 22;
+      const iconCenterX = isMobile ? width * 0.72 : width * 0.78;
+      const iconRadius = isMobile ? 22 : 24;
+      const videoRadius = isMobile ? 32 : 34;
 
       // Calculate node Y positions
       const total = outputNodes.length;
-      const topMargin = height * 0.05;
-      const bottomMargin = height * 0.05;
+      const topMargin = height * 0.04;
+      const bottomMargin = height * 0.04;
       const availableHeight = height - topMargin - bottomMargin;
       const spacing = availableHeight / (total - 1);
 
-      // Draw energy flows to icon centers
+      // Draw energy flows
       outputNodes.forEach((node, i) => {
         const endY = topMargin + i * spacing;
         const color = node.color;
@@ -112,12 +90,12 @@ export function ContentFlowVisualization() {
           ctx.moveTo(startX - narrowWidth, startY);
           ctx.bezierCurveTo(
             startX - narrowWidth * 2, midY,
-            iconCenterX - iconRadius, endY - spreadWidth * 2,
-            iconCenterX, endY - spreadWidth
+            iconCenterX - iconRadius * 1.2, endY - spreadWidth * 2,
+            iconCenterX - iconRadius + 2, endY - spreadWidth
           );
-          ctx.lineTo(iconCenterX, endY + spreadWidth);
+          ctx.lineTo(iconCenterX - iconRadius + 2, endY + spreadWidth);
           ctx.bezierCurveTo(
-            iconCenterX - iconRadius, endY + spreadWidth * 2,
+            iconCenterX - iconRadius * 1.2, endY + spreadWidth * 2,
             startX + narrowWidth * 2, midY,
             startX + narrowWidth, startY
           );
@@ -126,14 +104,14 @@ export function ContentFlowVisualization() {
           
           ctx.moveTo(startX, startY - narrowWidth);
           ctx.bezierCurveTo(
-            midX - 50, startY - narrowWidth * 0.5,
-            midX + 30, endY - spreadWidth * 2.5,
-            iconCenterX, endY - spreadWidth
+            midX - 60, startY - narrowWidth * 0.5,
+            midX + 40, endY - spreadWidth * 2.5,
+            iconCenterX - iconRadius + 2, endY - spreadWidth
           );
-          ctx.lineTo(iconCenterX, endY + spreadWidth);
+          ctx.lineTo(iconCenterX - iconRadius + 2, endY + spreadWidth);
           ctx.bezierCurveTo(
-            midX + 30, endY + spreadWidth * 2.5,
-            midX - 50, startY + narrowWidth * 0.5,
+            midX + 40, endY + spreadWidth * 2.5,
+            midX - 60, startY + narrowWidth * 0.5,
             startX, startY + narrowWidth
           );
         }
@@ -162,17 +140,16 @@ export function ContentFlowVisualization() {
         ctx.globalAlpha = 1;
       });
 
-      // VIDEO source node
-      const videoRadius = isMobile ? 32 : 30;
-      const pulseRadius = videoRadius + 4 + Math.sin(time * 2) * 2;
+      // Draw VIDEO source node (left side)
+      const videoPulse = videoRadius + 4 + Math.sin(time * 2) * 2;
       
       ctx.globalAlpha = 0.25;
-      const glowGradient = ctx.createRadialGradient(startX, startY, 0, startX, startY, pulseRadius + 8);
-      glowGradient.addColorStop(0, '#8B5CF6');
-      glowGradient.addColorStop(1, 'transparent');
-      ctx.fillStyle = glowGradient;
+      const videoGlow = ctx.createRadialGradient(startX, startY, 0, startX, startY, videoPulse + 10);
+      videoGlow.addColorStop(0, '#8B5CF6');
+      videoGlow.addColorStop(1, 'transparent');
+      ctx.fillStyle = videoGlow;
       ctx.beginPath();
-      ctx.arc(startX, startY, pulseRadius + 8, 0, Math.PI * 2);
+      ctx.arc(startX, startY, videoPulse + 10, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.globalAlpha = 1;
@@ -182,12 +159,15 @@ export function ContentFlowVisualization() {
       ctx.fill();
       
       ctx.strokeStyle = '#8B5CF6';
-      ctx.lineWidth = 2.5;
+      ctx.lineWidth = 3;
+      ctx.shadowColor = '#8B5CF6';
+      ctx.shadowBlur = 15;
       ctx.stroke();
+      ctx.shadowBlur = 0;
 
-      ctx.fillStyle = '#8B5CF650';
+      ctx.fillStyle = '#8B5CF660';
       ctx.beginPath();
-      ctx.arc(startX, startY, videoRadius - 7, 0, Math.PI * 2);
+      ctx.arc(startX, startY, videoRadius - 8, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = '#F5F0EB';
@@ -195,6 +175,58 @@ export function ContentFlowVisualization() {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('VIDEO', startX, startY);
+
+      // Draw OUTPUT nodes (right side) - SAME STYLE as VIDEO node
+      outputNodes.forEach((node, i) => {
+        const endY = topMargin + i * spacing;
+        const color = node.color;
+        const pulse = iconRadius + 3 + Math.sin(time * 2 + i * 0.3) * 1.5;
+
+        // Outer glow
+        ctx.globalAlpha = 0.2;
+        const nodeGlow = ctx.createRadialGradient(iconCenterX, endY, 0, iconCenterX, endY, pulse + 8);
+        nodeGlow.addColorStop(0, color);
+        nodeGlow.addColorStop(1, 'transparent');
+        ctx.fillStyle = nodeGlow;
+        ctx.beginPath();
+        ctx.arc(iconCenterX, endY, pulse + 8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Circle background
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = 'hsl(220 20% 6%)';
+        ctx.beginPath();
+        ctx.arc(iconCenterX, endY, iconRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Border with glow
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 12;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Inner glow
+        ctx.fillStyle = color + '40';
+        ctx.beginPath();
+        ctx.arc(iconCenterX, endY, iconRadius - 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Icon letter
+        ctx.fillStyle = color;
+        ctx.font = `700 ${iconRadius * 0.5}px 'Space Grotesk', sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(node.iconLetter, iconCenterX, endY);
+
+        // Label to the right
+        ctx.fillStyle = '#F5F0EB';
+        ctx.font = "500 12px 'Inter', sans-serif";
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(node.label, iconCenterX + iconRadius + 12, endY);
+      });
 
       animationRef.current = requestAnimationFrame(animate);
     };
@@ -207,30 +239,14 @@ export function ContentFlowVisualization() {
     };
   }, [isMobile]);
 
-  // Calculate positions
-  const getNodePositions = () => {
-    const height = isMobile ? 600 : 480;
-    const total = outputNodes.length;
-    const topMargin = height * 0.05;
-    const availableHeight = height - topMargin * 2;
-    const spacing = availableHeight / (total - 1);
-    const iconCenterX = isMobile ? '28%' : '35%';
-    
-    return outputNodes.map((_, i) => ({
-      top: topMargin + i * spacing,
-      left: iconCenterX,
-    }));
-  };
-
-  const positions = getNodePositions();
-  const containerHeight = isMobile ? 600 : 480;
+  const containerHeight = isMobile ? 620 : 500;
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 1, delay: 0.6 }}
-      className="mt-12 relative w-full pb-20"
+      className="mt-12 relative w-full pb-16"
     >
       <div 
         className="relative w-full"
@@ -240,47 +256,6 @@ export function ContentFlowVisualization() {
           ref={canvasRef}
           className="absolute inset-0 w-full h-full block"
         />
-
-        {/* Icons and labels */}
-        {outputNodes.map((node, i) => {
-          const Icon = node.icon;
-          const pos = positions[i];
-          
-          return (
-            <motion.div
-              key={node.id}
-              className="absolute flex items-center gap-3"
-              style={{ 
-                left: pos.left,
-                top: `${pos.top}px`,
-                transform: 'translate(-50%, -50%)',
-              }}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.4, delay: 0.9 + i * 0.03 }}
-            >
-              {/* Icon */}
-              <div 
-                className="flex items-center justify-center w-10 h-10 rounded-full flex-shrink-0"
-                style={{ 
-                  backgroundColor: 'hsl(220 18% 8%)',
-                  border: `2px solid ${node.color}`,
-                  boxShadow: `0 0 15px ${node.color}60`,
-                }}
-              >
-                <Icon size={20} color={node.color} strokeWidth={1.5} />
-              </div>
-              
-              {/* Label to the right */}
-              <span 
-                className="text-sm font-medium whitespace-nowrap"
-                style={{ color: '#F5F0EB' }}
-              >
-                {node.label}
-              </span>
-            </motion.div>
-          );
-        })}
       </div>
     </motion.div>
   );
