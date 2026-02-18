@@ -23,6 +23,8 @@ const outputNodes: OutputNode[] = [
 export function ContentFlowVisualization() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const timeRef = useRef(0);
+  const animationRef = useRef<number>(0);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -38,104 +40,91 @@ export function ContentFlowVisualization() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const draw = () => {
+    const resize = () => {
       const dpr = window.devicePixelRatio || 1;
       const rect = canvas.getBoundingClientRect();
       canvas.width = rect.width * dpr;
       canvas.height = rect.height * dpr;
       ctx.scale(dpr, dpr);
+    };
+    resize();
+    window.addEventListener('resize', resize);
 
+    const animate = () => {
+      const rect = canvas.getBoundingClientRect();
       const width = rect.width;
       const height = rect.height;
       
       ctx.clearRect(0, 0, width, height);
+      timeRef.current += 0.05;
+      const pulse = (Math.sin(timeRef.current) + 1) / 2; // 0 to 1
 
-      // Layout
-      const startX = isMobile ? width * 0.18 : width * 0.12;
+      // Layout - wider spread
+      const startX = isMobile ? width * 0.12 : width * 0.08;
       const startY = height / 2;
-      const boxCenterX = isMobile ? width * 0.72 : width * 0.78;
+      const boxCenterX = isMobile ? width * 0.78 : width * 0.85;
       
-      // Box dimensions (rounded rectangles)
-      const boxW = isMobile ? 75 : 85;
-      const boxH = isMobile ? 32 : 36;
-      const cornerRadius = 12;
-      const videoBoxW = isMobile ? 85 : 95;
-      const videoBoxH = isMobile ? 55 : 62;
+      // Box dimensions
+      const boxW = isMobile ? 70 : 80;
+      const boxH = isMobile ? 30 : 34;
+      const cornerRadius = 10;
+      const videoBoxW = isMobile ? 80 : 90;
+      const videoBoxH = isMobile ? 50 : 58;
 
       // Calculate node Y positions
       const total = outputNodes.length;
-      const topMargin = height * 0.04;
-      const bottomMargin = height * 0.04;
+      const topMargin = height * 0.06;
+      const bottomMargin = height * 0.06;
       const availableHeight = height - topMargin - bottomMargin;
       const spacing = availableHeight / (total - 1);
 
-      // Draw energy flows (static with glow effect)
+      // Draw connection lines (thin with pulse glow)
       outputNodes.forEach((node, i) => {
         const endY = topMargin + i * spacing;
         const color = node.color;
+        const linePulse = 0.5 + (Math.sin(timeRef.current + i * 0.3) + 1) / 4; // 0.5 to 1
 
         ctx.beginPath();
         
-        const narrowWidth = isMobile ? 3 : 4;
-        
         if (isMobile) {
           const midY = (startY + endY) / 2;
-          
-          ctx.moveTo(startX, startY - narrowWidth);
+          ctx.moveTo(startX + videoBoxW/2, startY);
           ctx.bezierCurveTo(
-            startX - narrowWidth * 2, midY,
-            boxCenterX - boxW / 2 - 5, endY - boxH / 2 + 8,
-            boxCenterX - boxW / 2, endY
-          );
-          ctx.lineTo(boxCenterX + boxW / 2, endY);
-          ctx.bezierCurveTo(
-            boxCenterX + boxW / 2 + 5, endY + boxH / 2 - 8,
-            startX + narrowWidth * 2, midY,
-            startX, startY + narrowWidth
+            startX + videoBoxW/2 + 30, startY,
+            boxCenterX - boxW/2 - 30, endY,
+            boxCenterX - boxW/2, endY
           );
         } else {
           const midX = (startX + boxCenterX) / 2;
-          
-          ctx.moveTo(startX, startY - narrowWidth);
+          ctx.moveTo(startX + videoBoxW/2, startY);
           ctx.bezierCurveTo(
-            midX - 60, startY - narrowWidth * 0.5,
-            midX + 40, endY - boxH / 2 + 10,
-            boxCenterX - boxW / 2, endY
-          );
-          ctx.lineTo(boxCenterX + boxW / 2, endY);
-          ctx.bezierCurveTo(
-            midX + 40, endY + boxH / 2 - 10,
-            midX - 60, startY + narrowWidth * 0.5,
-            startX, startY + narrowWidth
+            midX - 40, startY,
+            midX + 40, endY,
+            boxCenterX - boxW/2, endY
           );
         }
         
-        ctx.closePath();
-
-        // Static gradient
-        const gradient = ctx.createLinearGradient(startX, startY, boxCenterX, endY);
-        gradient.addColorStop(0, color + '15');
-        gradient.addColorStop(0.5, color + '40');
-        gradient.addColorStop(1, color + '15');
-
-        ctx.fillStyle = gradient;
-        ctx.fill();
-
-        // Glow outline
+        // Thin line with glow pulse
         ctx.strokeStyle = color;
-        ctx.lineWidth = 1;
-        ctx.globalAlpha = 0.5;
+        ctx.lineWidth = 1.5;
+        ctx.globalAlpha = 0.4 + linePulse * 0.4;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 8 + linePulse * 12;
         ctx.stroke();
+        ctx.shadowBlur = 0;
         ctx.globalAlpha = 1;
       });
 
-      // Draw VIDEO source box (left side) - Rounded Rectangle
+      // Draw VIDEO source box with pulse glow
+      const videoPulse = 0.8 + (Math.sin(timeRef.current * 0.8) + 1) / 10; // subtle pulse
+      
       ctx.save();
       ctx.translate(startX, startY);
+      ctx.scale(videoPulse, videoPulse);
       
-      // Glow
+      // Glow pulse
       ctx.shadowColor = '#8B5CF6';
-      ctx.shadowBlur = 30;
+      ctx.shadowBlur = 15 + pulse * 15;
       
       // Rounded rect background
       ctx.fillStyle = 'hsl(220 20% 6%)';
@@ -143,39 +132,41 @@ export function ContentFlowVisualization() {
       ctx.roundRect(-videoBoxW / 2, -videoBoxH / 2, videoBoxW, videoBoxH, cornerRadius);
       ctx.fill();
       
-      // Border
+      // Border with pulse
       ctx.strokeStyle = '#8B5CF6';
-      ctx.lineWidth = 3;
+      ctx.lineWidth = 2 + pulse * 1;
       ctx.stroke();
       
       ctx.shadowBlur = 0;
       
       // Inner glow
-      ctx.fillStyle = '#8B5CF660';
+      ctx.fillStyle = `rgba(139, 92, 246, ${0.3 + pulse * 0.2})`;
       ctx.beginPath();
-      ctx.roundRect(-videoBoxW / 2 + 4, -videoBoxH / 2 + 4, videoBoxW - 8, videoBoxH - 8, cornerRadius - 4);
+      ctx.roundRect(-videoBoxW / 2 + 3, -videoBoxH / 2 + 3, videoBoxW - 6, videoBoxH - 6, cornerRadius - 3);
       ctx.fill();
       
       // Text
       ctx.fillStyle = '#F5F0EB';
-      ctx.font = "700 14px 'Space Grotesk', sans-serif";
+      ctx.font = "700 13px 'Space Grotesk', sans-serif";
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('VIDEO', 0, 0);
       
       ctx.restore();
 
-      // Draw OUTPUT boxes (right side) - Rounded Rectangles with FULL LABELS inside
+      // Draw OUTPUT boxes with individual pulse glow
       outputNodes.forEach((node, i) => {
         const endY = topMargin + i * spacing;
         const color = node.color;
+        const boxPulse = 0.9 + (Math.sin(timeRef.current * 0.6 + i * 0.4) + 1) / 10;
         
         ctx.save();
         ctx.translate(boxCenterX, endY);
+        ctx.scale(boxPulse, boxPulse);
         
-        // Glow
+        // Glow pulse
         ctx.shadowColor = color;
-        ctx.shadowBlur = 20;
+        ctx.shadowBlur = 10 + (Math.sin(timeRef.current + i * 0.5) + 1) * 8;
         
         // Rounded rect background
         ctx.fillStyle = 'hsl(220 20% 6%)';
@@ -183,39 +174,43 @@ export function ContentFlowVisualization() {
         ctx.roundRect(-boxW / 2, -boxH / 2, boxW, boxH, cornerRadius);
         ctx.fill();
 
-        // Border
+        // Border with pulse
         ctx.strokeStyle = color;
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 1.5;
         ctx.stroke();
         
         ctx.shadowBlur = 0;
 
-        // Inner glow
-        ctx.fillStyle = color + '40';
+        // Inner glow pulse
+        const innerAlpha = 0.25 + (Math.sin(timeRef.current * 0.7 + i * 0.3) + 1) / 4;
+        ctx.fillStyle = color + Math.round(innerAlpha * 255).toString(16).padStart(2, '0');
         ctx.beginPath();
-        ctx.roundRect(-boxW / 2 + 3, -boxH / 2 + 3, boxW - 6, boxH - 6, cornerRadius - 3);
+        ctx.roundRect(-boxW / 2 + 2, -boxH / 2 + 2, boxW - 4, boxH - 4, cornerRadius - 2);
         ctx.fill();
 
-        // FULL LABEL inside box
+        // Label
         ctx.fillStyle = '#F5F0EB';
-        ctx.font = `600 ${boxH * 0.36}px 'Space Grotesk', sans-serif`;
+        ctx.font = `600 ${boxH * 0.35}px 'Space Grotesk', sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(node.label, 0, 0);
         
         ctx.restore();
       });
+
+      animationRef.current = requestAnimationFrame(animate);
     };
 
-    draw();
+    animate();
 
-    const handleResize = () => draw();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', resize);
+      cancelAnimationFrame(animationRef.current);
+    };
   }, [isMobile]);
 
-  // MUCH TALLER container for bigger visualization
-  const containerHeight = isMobile ? 800 : 720;
+  // Lower and wider container
+  const containerHeight = isMobile ? 600 : 520;
 
   return (
     <motion.div
@@ -225,7 +220,7 @@ export function ContentFlowVisualization() {
       className="mt-12 relative w-full pb-20"
     >
       <div 
-        className="relative w-full pulse-glow-lines"
+        className="relative w-full"
         style={{ height: `${containerHeight}px` }}
       >
         <canvas
@@ -233,26 +228,6 @@ export function ContentFlowVisualization() {
           className="absolute inset-0 w-full h-full block"
         />
       </div>
-      <style>{`
-        .pulse-glow-lines {
-          position: relative;
-        }
-        .pulse-glow-lines::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: radial-gradient(ellipse at 30% 50%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
-                      radial-gradient(ellipse at 70% 20%, rgba(52, 211, 153, 0.06) 0%, transparent 40%),
-                      radial-gradient(ellipse at 70% 80%, rgba(245, 158, 11, 0.06) 0%, transparent 40%);
-          animation: pulseGlow 4s ease-in-out infinite;
-          pointer-events: none;
-          z-index: 1;
-        }
-        @keyframes pulseGlow {
-          0%, 100% { opacity: 0.6; }
-          50% { opacity: 1; }
-        }
-      `}</style>
     </motion.div>
   );
 }
