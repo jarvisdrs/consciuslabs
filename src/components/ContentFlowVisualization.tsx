@@ -5,19 +5,20 @@ interface OutputNode {
   id: string;
   label: string;
   color: string;
+  iconLetter: string;
 }
 
 const outputNodes: OutputNode[] = [
-  { id: 'blog', label: 'Blog', color: '#8B5CF6' },
-  { id: 'newsletter', label: 'News', color: '#A78BFA' },
-  { id: 'x', label: 'X', color: '#E5E5E5' },
-  { id: 'reel', label: 'Reel', color: '#34D399' },
-  { id: 'infografica', label: 'Info', color: '#10B981' },
-  { id: 'podcast', label: 'Podcast', color: '#F59E0B' },
-  { id: 'story', label: 'Story', color: '#EF4444' },
-  { id: 'articolo', label: 'Articolo', color: '#EC4899' },
-  { id: 'linkedin', label: 'LinkedIn', color: '#3B82F6' },
-  { id: 'adcopy', label: 'Ad Copy', color: '#8B5CF6' },
+  { id: 'blog', label: 'Blog Post', color: '#8B5CF6', iconLetter: 'B' },
+  { id: 'newsletter', label: 'Newsletter', color: '#A78BFA', iconLetter: 'N' },
+  { id: 'x', label: 'X', color: '#E5E5E5', iconLetter: '𝕏' },
+  { id: 'reel', label: 'Reel', color: '#34D399', iconLetter: 'R' },
+  { id: 'infografica', label: 'Infografica', color: '#10B981', iconLetter: 'I' },
+  { id: 'podcast', label: 'Podcast', color: '#F59E0B', iconLetter: 'P' },
+  { id: 'story', label: 'Story', color: '#EF4444', iconLetter: 'S' },
+  { id: 'articolo', label: 'Articolo', color: '#EC4899', iconLetter: 'A' },
+  { id: 'linkedin', label: 'LinkedIn', color: '#3B82F6', iconLetter: 'in' },
+  { id: 'adcopy', label: 'Ad Copy', color: '#8B5CF6', iconLetter: 'Ad' },
 ];
 
 export function ContentFlowVisualization() {
@@ -60,11 +61,16 @@ export function ContentFlowVisualization() {
       const time = timeRef.current;
 
       // Layout
-      const startX = isMobile ? width * 0.15 : width * 0.1;
+      const startX = isMobile ? width * 0.18 : width * 0.12;
       const startY = height / 2;
-      const iconCenterX = isMobile ? width * 0.5 : width * 0.55;
-      const iconRadius = isMobile ? 38 : 42; // LARGER circles for full labels
-      const videoRadius = isMobile ? 32 : 34;
+      const boxCenterX = isMobile ? width * 0.72 : width * 0.78;
+      
+      // Box dimensions (rounded rectangles)
+      const boxW = isMobile ? 44 : 48;
+      const boxH = isMobile ? 44 : 48;
+      const cornerRadius = 12;
+      const videoBoxW = isMobile ? 64 : 68;
+      const videoBoxH = isMobile ? 64 : 68;
 
       // Calculate node Y positions
       const total = outputNodes.length;
@@ -81,35 +87,34 @@ export function ContentFlowVisualization() {
         ctx.beginPath();
         
         const narrowWidth = isMobile ? 3 : 4;
-        const spreadWidth = isMobile ? 3 : 4;
         
         if (isMobile) {
           const midY = (startY + endY) / 2;
           
-          ctx.moveTo(startX - narrowWidth, startY);
+          ctx.moveTo(startX, startY - narrowWidth);
           ctx.bezierCurveTo(
             startX - narrowWidth * 2, midY,
-            iconCenterX - iconRadius * 1.2, endY - spreadWidth * 2,
-            iconCenterX - iconRadius + 2, endY - spreadWidth
+            boxCenterX - boxW / 2 - 5, endY - boxH / 2 + 8,
+            boxCenterX - boxW / 2, endY
           );
-          ctx.lineTo(iconCenterX - iconRadius + 2, endY + spreadWidth);
+          ctx.lineTo(boxCenterX + boxW / 2, endY);
           ctx.bezierCurveTo(
-            iconCenterX - iconRadius * 1.2, endY + spreadWidth * 2,
+            boxCenterX + boxW / 2 + 5, endY + boxH / 2 - 8,
             startX + narrowWidth * 2, midY,
-            startX + narrowWidth, startY
+            startX, startY + narrowWidth
           );
         } else {
-          const midX = (startX + iconCenterX) / 2;
+          const midX = (startX + boxCenterX) / 2;
           
           ctx.moveTo(startX, startY - narrowWidth);
           ctx.bezierCurveTo(
             midX - 60, startY - narrowWidth * 0.5,
-            midX + 40, endY - spreadWidth * 2.5,
-            iconCenterX - iconRadius + 2, endY - spreadWidth
+            midX + 40, endY - boxH / 2 + 10,
+            boxCenterX - boxW / 2, endY
           );
-          ctx.lineTo(iconCenterX - iconRadius + 2, endY + spreadWidth);
+          ctx.lineTo(boxCenterX + boxW / 2, endY);
           ctx.bezierCurveTo(
-            midX + 40, endY + spreadWidth * 2.5,
+            midX + 40, endY + boxH / 2 - 10,
             midX - 60, startY + narrowWidth * 0.5,
             startX, startY + narrowWidth
           );
@@ -118,7 +123,7 @@ export function ContentFlowVisualization() {
         ctx.closePath();
 
         // Flowing gradient
-        const gradient = ctx.createLinearGradient(startX, startY, iconCenterX, endY);
+        const gradient = ctx.createLinearGradient(startX, startY, boxCenterX, endY);
         const offset = (time + i * 0.1) % 1;
         const glowWidth = 0.15;
         
@@ -139,93 +144,93 @@ export function ContentFlowVisualization() {
         ctx.globalAlpha = 1;
       });
 
-      // Draw VIDEO source node (left side)
-      const videoPulse = videoRadius + 4 + Math.sin(time * 2) * 2;
+      // Draw VIDEO source box (left side) - Rounded Rectangle
+      const videoPulse = 1 + Math.sin(time * 2) * 0.03;
       
-      ctx.globalAlpha = 0.25;
-      const videoGlow = ctx.createRadialGradient(startX, startY, 0, startX, startY, videoPulse + 10);
-      videoGlow.addColorStop(0, '#8B5CF6');
-      videoGlow.addColorStop(1, 'transparent');
-      ctx.fillStyle = videoGlow;
-      ctx.beginPath();
-      ctx.arc(startX, startY, videoPulse + 10, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.globalAlpha = 1;
+      ctx.save();
+      ctx.translate(startX, startY);
+      ctx.scale(videoPulse, videoPulse);
+      
+      // Glow
+      ctx.shadowColor = '#8B5CF6';
+      ctx.shadowBlur = 25;
+      
+      // Rounded rect background
       ctx.fillStyle = 'hsl(220 20% 6%)';
       ctx.beginPath();
-      ctx.arc(startX, startY, videoRadius, 0, Math.PI * 2);
+      ctx.roundRect(-videoBoxW / 2, -videoBoxH / 2, videoBoxW, videoBoxH, cornerRadius);
       ctx.fill();
       
+      // Border
       ctx.strokeStyle = '#8B5CF6';
       ctx.lineWidth = 3;
-      ctx.shadowColor = '#8B5CF6';
-      ctx.shadowBlur = 15;
       ctx.stroke();
+      
       ctx.shadowBlur = 0;
-
+      
+      // Inner glow
       ctx.fillStyle = '#8B5CF660';
       ctx.beginPath();
-      ctx.arc(startX, startY, videoRadius - 8, 0, Math.PI * 2);
+      ctx.roundRect(-videoBoxW / 2 + 4, -videoBoxH / 2 + 4, videoBoxW - 8, videoBoxH - 8, cornerRadius - 4);
       ctx.fill();
-
+      
+      // Text
       ctx.fillStyle = '#F5F0EB';
       ctx.font = "700 12px 'Space Grotesk', sans-serif";
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('VIDEO', startX, startY);
+      ctx.fillText('VIDEO', 0, 0);
+      
+      ctx.restore();
 
-      // Draw OUTPUT nodes (right side) - CIRCLES with FULL LABELS inside
+      // Draw OUTPUT boxes (right side) - Rounded Rectangles with letters inside
       outputNodes.forEach((node, i) => {
         const endY = topMargin + i * spacing;
         const color = node.color;
-        const pulse = iconRadius + 3 + Math.sin(time * 2 + i * 0.3) * 1.5;
-
-        // Outer glow
-        ctx.globalAlpha = 0.2;
-        const nodeGlow = ctx.createRadialGradient(iconCenterX, endY, 0, iconCenterX, endY, pulse + 8);
-        nodeGlow.addColorStop(0, color);
-        nodeGlow.addColorStop(1, 'transparent');
-        ctx.fillStyle = nodeGlow;
-        ctx.beginPath();
-        ctx.arc(iconCenterX, endY, pulse + 8, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Circle background - LARGER for text
-        ctx.globalAlpha = 1;
+        const pulse = 1 + Math.sin(time * 2 + i * 0.3) * 0.02;
+        
+        ctx.save();
+        ctx.translate(boxCenterX, endY);
+        ctx.scale(pulse, pulse);
+        
+        // Glow
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 20;
+        
+        // Rounded rect background
         ctx.fillStyle = 'hsl(220 20% 6%)';
         ctx.beginPath();
-        ctx.arc(iconCenterX, endY, iconRadius, 0, Math.PI * 2);
+        ctx.roundRect(-boxW / 2, -boxH / 2, boxW, boxH, cornerRadius);
         ctx.fill();
 
-        // Border with glow
+        // Border
         ctx.strokeStyle = color;
         ctx.lineWidth = 2;
-        ctx.shadowColor = color;
-        ctx.shadowBlur = 12;
         ctx.stroke();
+        
         ctx.shadowBlur = 0;
 
         // Inner glow
         ctx.fillStyle = color + '40';
         ctx.beginPath();
-        ctx.arc(iconCenterX, endY, iconRadius - 6, 0, Math.PI * 2);
+        ctx.roundRect(-boxW / 2 + 3, -boxH / 2 + 3, boxW - 6, boxH - 6, cornerRadius - 3);
         ctx.fill();
 
-        // FULL LABEL inside circle - smaller font
-        ctx.fillStyle = '#F5F0EB';
-        ctx.font = `600 ${iconRadius * 0.35}px 'Space Grotesk', sans-serif`;
+        // Letter inside box
+        ctx.fillStyle = color;
+        ctx.font = `700 ${boxW * 0.45}px 'Space Grotesk', sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
+        ctx.fillText(node.iconLetter, 0, 0);
         
-        // Split long labels into two lines if needed
-        const words = node.label.split(' ');
-        if (words.length > 1 && node.label.length > 6) {
-          ctx.fillText(words[0], iconCenterX, endY - 5);
-          ctx.fillText(words.slice(1).join(' '), iconCenterX, endY + 5);
-        } else {
-          ctx.fillText(node.label, iconCenterX, endY);
-        }
+        ctx.restore();
+
+        // Label to the right of box
+        ctx.fillStyle = '#F5F0EB';
+        ctx.font = "500 12px 'Inter', sans-serif";
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(node.label, boxCenterX + boxW / 2 + 12, endY);
       });
 
       animationRef.current = requestAnimationFrame(animate);
