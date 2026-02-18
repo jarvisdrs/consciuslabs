@@ -154,7 +154,7 @@ export function CaseStudiesSection() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-primary text-primary-foreground font-semibold hover:opacity-90 transition"
             >
-              Prenota Call Gratuita
+              Prenota una call
               <ArrowUpRight size={18} />
             </a>
           </motion.div>

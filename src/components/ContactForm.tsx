@@ -13,15 +13,13 @@ export function ContactForm() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    company: "",
     audioLink: "",
-    message: "",
     termsAccepted: false
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const sendTelegramAlert = async (data: typeof formData) => {
-    const text = `🚨 NUOVO LEAD CONSCIUSLABS!\n\n👤 Nome: ${data.name}\n📧 Email: ${data.email}\n🏢 Azienda: ${data.company || "N/D"}\n🔗 Link Audio: ${data.audioLink || "N/D"}\n💬 Messaggio: ${data.message || "N/D"}`;
+    const text = `🚨 NUOVO LEAD CONSCIUSLABS!\n\n👤 Nome: ${data.name}\n📧 Email: ${data.email}\n🔗 Link Audio: ${data.audioLink || "N/D"}`;
     
     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
       method: "POST",
@@ -41,9 +39,7 @@ export function ContactForm() {
       body: JSON.stringify({
         name: data.name,
         email: data.email,
-        company: data.company,
         audioUrl: data.audioLink,
-        message: data.message,
         timestamp: new Date().toISOString()
       })
     });
@@ -60,21 +56,15 @@ export function ContactForm() {
     setIsSubmitting(true);
 
     try {
-      // 1. Invia alert Telegram
       await sendTelegramAlert(formData);
-      
-      // 2. Triggera workflow n8n
       await triggerN8NWorkflow(formData);
       
       toast.success("Messaggio inviato! Ti contatteremo entro 24h.");
       
-      // Reset form
       setFormData({
         name: "",
         email: "",
-        company: "",
         audioLink: "",
-        message: "",
         termsAccepted: false
       });
     } catch (error) {
@@ -86,59 +76,39 @@ export function ContactForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium mb-2">Nome *</label>
-          <Input
-            required
-            value={formData.name}
-            onChange={(e) => setFormData({...formData, name: e.target.value})}
-            placeholder="Mario Rossi"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-2">Email *</label>
-          <Input
-            required
-            type="email"
-            value={formData.email}
-            onChange={(e) => setFormData({...formData, email: e.target.value})}
-            placeholder="mario@azienda.it"
-          />
-        </div>
-      </div>
-
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium mb-2">Azienda</label>
+        <label className="block text-sm font-medium mb-2">Nome *</label>
         <Input
-          value={formData.company}
-          onChange={(e) => setFormData({...formData, company: e.target.value})}
-          placeholder="Nome azienda (opzionale)"
+          required
+          value={formData.name}
+          onChange={(e) => setFormData({...formData, name: e.target.value})}
+          placeholder="Mario Rossi"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-2">Link Audio/Video *</label>
+        <label className="block text-sm font-medium mb-2">Email *</label>
+        <Input
+          required
+          type="email"
+          value={formData.email}
+          onChange={(e) => setFormData({...formData, email: e.target.value})}
+          placeholder="mario@email.com"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-2">Link al tuo video *</label>
         <Input
           required
           value={formData.audioLink}
           onChange={(e) => setFormData({...formData, audioLink: e.target.value})}
-          placeholder="https://wetransfer.com/... o https://drive.google.com/..."
+          placeholder="https://drive.google.com/... o WeTransfer"
         />
         <p className="text-xs text-muted-foreground mt-1">
-          Carica su WeTransfer, Google Drive o Dropbox
+          Carica su Google Drive, WeTransfer o Dropbox
         </p>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium mb-2">Messaggio</label>
-        <Textarea
-          value={formData.message}
-          onChange={(e) => setFormData({...formData, message: e.target.value})}
-          placeholder="Descrivi il tuo progetto o richieste specifiche..."
-          rows={4}
-        />
       </div>
 
       <div className="flex items-start space-x-3">
@@ -151,9 +121,9 @@ export function ContactForm() {
         />
         <label htmlFor="terms" className="text-sm">
           Accetto i{" "}
-          <a href="/termini" className="text-primary hover:underline">Termini di Servizio</a>
-          {" "}e la{" "}
-          <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a>
+          <a href="/termini" className="text-primary hover:underline">Termini</a>
+          {" "}e{" "}
+          <a href="/privacy" className="text-primary hover:underline">Privacy</a>
           {" "}*
         </label>
       </div>
@@ -163,7 +133,7 @@ export function ContactForm() {
         className="w-full"
         disabled={isSubmitting}
       >
-        {isSubmitting ? "Invio in corso..." : "Invia Richiesta"}
+        {isSubmitting ? "Invio in corso..." : "Invia richiesta"}
       </Button>
     </form>
   );

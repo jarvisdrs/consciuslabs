@@ -2,13 +2,25 @@ import { useState } from "react";
 import { Linkedin, Twitter, Instagram, Send } from "lucide-react";
 
 const links = {
-  Servizi: ["Content Multiplication", "Workflow Automation", "Multi-Platform", "Brand Consistency"],
-  "Chi Siamo": [{ label: "Il Team", href: "/chi-siamo" }, { label: "La Mission", href: "/chi-siamo" }],
-  Supporto: ["Contatti", "Pricing", "FAQ"],
+  Servizi: [
+    { label: "Content Multiplication", href: "/servizi" },
+    { label: "Workflow Automation", href: "/servizi" },
+    { label: "Multi-Platform", href: "/servizi" },
+    { label: "Brand Consistency", href: "/servizi" }
+  ],
+  "Chi Siamo": [
+    { label: "Il Team", href: "/chi-siamo" },
+    { label: "La Mission", href: "/chi-siamo" }
+  ],
+  Supporto: [
+    { label: "Contatti", href: "/supporto" },
+    { label: "Pricing", href: "/preventivo" },
+    { label: "FAQ", href: "/supporto" }
+  ],
 };
 
 const socials = [
-  { icon: Linkedin, href: "#", label: "LinkedIn" },
+  { icon: Linkedin, href: "https://www.linkedin.com/company/consciuslabs", label: "LinkedIn" },
   { icon: Twitter, href: "https://x.com/ConsciusLabs", label: "X" },
   { icon: Instagram, href: "https://www.instagram.com/consciuslabs/", label: "Instagram" },
 ];

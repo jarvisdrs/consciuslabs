@@ -7,7 +7,6 @@ import {
   Video, 
   Share2, 
   Zap, 
-  BarChart3, 
   Workflow,
   ArrowRight
 } from "lucide-react";
@@ -36,12 +35,6 @@ const servizi = [
     title: "Workflow Automation",
     description: "Processi automatizzati che riducono i tempi di produzione e garantiscono consistenza.",
     features: ["AI-powered transcription", "Auto-formatting", "Scheduling automatico", "Quality check"]
-  },
-  {
-    icon: BarChart3,
-    title: "Analytics & Optimization",
-    description: "Monitoriamo le performance e ottimizziamo i contenuti per massimizzare l'engagement.",
-    features: ["Report mensili", "A/B testing", "Trend analysis", "Recommendation"]
   },
   {
     icon: Workflow,

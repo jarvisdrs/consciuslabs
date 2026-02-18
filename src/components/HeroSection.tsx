@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { ContentFlowVisualization } from "./ContentFlowVisualization";
 
 export function HeroSection() {
@@ -22,9 +23,10 @@ export function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7 }}
           >
-            <span className="inline-block px-4 py-1.5 mb-6 text-xs font-medium rounded-full bg-primary/10 text-primary border border-primary/20">
+            <Badge className="mb-6 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 px-4 py-1.5 text-sm">
+              <Sparkles className="w-4 h-4 mr-2" />
               AI Content Lab
-            </span>
+            </Badge>
           </motion.div>
 
           <motion.h1
@@ -52,21 +54,22 @@ export function HeroSection() {
             transition={{ duration: 0.7, delay: 0.3 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
-            <Button variant="hero" size="lg" onClick={() => scrollTo("come-funziona")}>
-              Scopri Come Funziona
-              <ArrowRight className="ml-2" size={18} />
-            </Button>
-            <Button variant="hero-outline" size="lg" asChild>
+            <Button variant="hero" size="lg" asChild>
               <a href="/preventivo">
-                <ArrowRight size={18} className="mr-2" />
-                Richiedi un Preventivo
+                Scopri i piani
+                <ArrowRight className="ml-2" size={18} />
               </a>
+            </Button>
+            <Button variant="hero-outline" size="lg" onClick={() => scrollTo("casi-studio")}>
+              Vedi i risultati
             </Button>
           </motion.div>
         </div>
 
         {/* Content Flow Visualization */}
-        <ContentFlowVisualization />
+        <div id="casi-studio">
+          <ContentFlowVisualization />
+        </div>
       </div>
     </section>
   );
