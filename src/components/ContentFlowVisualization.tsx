@@ -65,8 +65,8 @@ export function ContentFlowVisualization() {
       const boxCenterX = isMobile ? width * 0.72 : width * 0.78;
       
       // Box dimensions (rounded rectangles)
-      const boxW = isMobile ? 85 : 100;      // Output boxes - slightly smaller
-      const boxH = isMobile ? 38 : 42;       // Output boxes - slightly smaller
+      const boxW = isMobile ? 75 : 85;       // Output boxes - compact
+      const boxH = isMobile ? 32 : 36;       // Output boxes - compact
       const cornerRadius = 12;
       const videoBoxW = isMobile ? 85 : 95;  // VIDEO box - larger
       const videoBoxH = isMobile ? 55 : 62;  // VIDEO box - larger
