@@ -64,12 +64,12 @@ export function ContentFlowVisualization() {
       const startY = height / 2;
       const boxCenterX = isMobile ? width * 0.72 : width * 0.78;
       
-      // Box dimensions (rounded rectangles) - WIDER for full labels
-      const boxW = isMobile ? 95 : 110;
-      const boxH = isMobile ? 44 : 48;
+      // Box dimensions (rounded rectangles)
+      const boxW = isMobile ? 85 : 100;      // Output boxes - slightly smaller
+      const boxH = isMobile ? 38 : 42;       // Output boxes - slightly smaller
       const cornerRadius = 12;
-      const videoBoxW = isMobile ? 64 : 68;
-      const videoBoxH = isMobile ? 64 : 68;
+      const videoBoxW = isMobile ? 85 : 95;  // VIDEO box - larger
+      const videoBoxH = isMobile ? 55 : 62;  // VIDEO box - larger
 
       // Calculate node Y positions
       const total = outputNodes.length;
@@ -173,9 +173,9 @@ export function ContentFlowVisualization() {
       ctx.roundRect(-videoBoxW / 2 + 4, -videoBoxH / 2 + 4, videoBoxW - 8, videoBoxH - 8, cornerRadius - 4);
       ctx.fill();
       
-      // Text
+      // Text - slightly larger for bigger box
       ctx.fillStyle = '#F5F0EB';
-      ctx.font = "700 12px 'Space Grotesk', sans-serif";
+      ctx.font = "700 14px 'Space Grotesk', sans-serif";
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('VIDEO', 0, 0);
@@ -217,7 +217,7 @@ export function ContentFlowVisualization() {
 
         // FULL LABEL inside box (no letter, no external label)
         ctx.fillStyle = '#F5F0EB';
-        ctx.font = `600 ${boxH * 0.32}px 'Space Grotesk', sans-serif`;
+        ctx.font = `600 ${boxH * 0.36}px 'Space Grotesk', sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(node.label, 0, 0);
