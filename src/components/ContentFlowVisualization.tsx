@@ -49,6 +49,7 @@ export function ContentFlowVisualization() {
   const animationRef = useRef<number>(0);
   const [isMobile, setIsMobile] = useState(false);
   const timeRef = useRef(0);
+  const nodePositionsRef = useRef<Array<{ y: number }>>([]);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -56,6 +57,19 @@ export function ContentFlowVisualization() {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Calculate node positions (shared between canvas and DOM)
+  const calculateNodePositions = (height: number) => {
+    const total = outputNodes.length;
+    const topMargin = height * 0.08;
+    const bottomMargin = height * 0.08;
+    const availableHeight = height - topMargin - bottomMargin;
+    const spacing = availableHeight / (total - 1);
+    
+    return outputNodes.map((_, i) => ({
+      y: topMargin + i * spacing,
+    }));
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -70,6 +84,9 @@ export function ContentFlowVisualization() {
       canvas.width = rect.width * dpr;
       canvas.height = rect.height * dpr;
       ctx.scale(dpr, dpr);
+      
+      // Update node positions
+      nodePositionsRef.current = calculateNodePositions(rect.height);
     };
     resize();
     window.addEventListener('resize', resize);
@@ -86,60 +103,52 @@ export function ContentFlowVisualization() {
       // Layout
       const startX = isMobile ? width * 0.12 : width * 0.08;
       const startY = height / 2;
-      const endX = isMobile ? width * 0.88 : width * 0.92;
-      
-      // Icon sizes for positioning calculation
-      const videoRadius = isMobile ? 28 : 26; // VIDEO node slightly larger
-      const outputRadius = isMobile ? 18 : 16; // Output nodes
+      const endX = isMobile ? width * 0.82 : width * 0.88;
+      const iconRadius = isMobile ? 20 : 18;
 
-      // Calculate node positions
-      const nodePositions = outputNodes.map((_, i) => {
-        const total = outputNodes.length;
-        const availableHeight = height * 0.82;
-        const topMargin = height * 0.09;
-        const spacing = availableHeight / (total - 1);
-        const y = topMargin + i * spacing;
-        return { x: endX, y, radius: outputRadius };
-      });
+      // Get node positions
+      const nodePositions = nodePositionsRef.current.length > 0 
+        ? nodePositionsRef.current 
+        : calculateNodePositions(height);
 
-      // Draw energy flow channels with connection to nodes
+      // Draw energy flows
       outputNodes.forEach((node, i) => {
-        const endPos = nodePositions[i];
+        const endY = nodePositions[i]?.y ?? (height * 0.1 + i * height * 0.08);
         const color = node.color;
 
         ctx.beginPath();
         
         const narrowWidth = isMobile ? 3 : 4;
-        const spreadWidth = isMobile ? 2.5 : 3.5;
+        const spreadWidth = isMobile ? 3 : 4;
         
         if (isMobile) {
-          const midY = (startY + endPos.y) / 2;
+          const midY = (startY + endY) / 2;
           
           ctx.moveTo(startX - narrowWidth, startY);
           ctx.bezierCurveTo(
             startX - narrowWidth * 2, midY,
-            endPos.x - endPos.radius * 2, endPos.y - spreadWidth * 2,
-            endPos.x - endPos.radius - 2, endPos.y - spreadWidth
+            endX - iconRadius * 2, endY - spreadWidth * 2,
+            endX - iconRadius - 2, endY - spreadWidth
           );
-          ctx.lineTo(endPos.x - endPos.radius - 2, endPos.y + spreadWidth);
+          ctx.lineTo(endX - iconRadius - 2, endY + spreadWidth);
           ctx.bezierCurveTo(
-            endPos.x - endPos.radius * 2, endPos.y + spreadWidth * 2,
+            endX - iconRadius * 2, endY + spreadWidth * 2,
             startX + narrowWidth * 2, midY,
             startX + narrowWidth, startY
           );
         } else {
-          const midX = (startX + endPos.x) / 2;
+          const midX = (startX + endX) / 2;
           
           ctx.moveTo(startX, startY - narrowWidth);
           ctx.bezierCurveTo(
-            midX - 50, startY - narrowWidth * 0.5,
-            midX + 30, endPos.y - spreadWidth * 2,
-            endPos.x - endPos.radius - 4, endPos.y - spreadWidth
+            midX - 60, startY - narrowWidth * 0.5,
+            midX + 40, endY - spreadWidth * 2.5,
+            endX - iconRadius - 4, endY - spreadWidth
           );
-          ctx.lineTo(endPos.x - endPos.radius - 4, endPos.y + spreadWidth);
+          ctx.lineTo(endX - iconRadius - 4, endY + spreadWidth);
           ctx.bezierCurveTo(
-            midX + 30, endPos.y + spreadWidth * 2,
-            midX - 50, startY + narrowWidth * 0.5,
+            midX + 40, endY + spreadWidth * 2.5,
+            midX - 60, startY + narrowWidth * 0.5,
             startX, startY + narrowWidth
           );
         }
@@ -147,7 +156,7 @@ export function ContentFlowVisualization() {
         ctx.closePath();
 
         // Flowing gradient
-        const gradient = ctx.createLinearGradient(startX, startY, endPos.x, endPos.y);
+        const gradient = ctx.createLinearGradient(startX, startY, endX, endY);
         const offset = (time + i * 0.1) % 1;
         const glowWidth = 0.15;
         
@@ -160,34 +169,33 @@ export function ContentFlowVisualization() {
         ctx.fillStyle = gradient;
         ctx.fill();
 
-        // Outline glow
+        // Outline
         ctx.strokeStyle = color;
         ctx.lineWidth = 0.5;
         ctx.globalAlpha = 0.35;
         ctx.stroke();
         ctx.globalAlpha = 1;
 
-        // Strong connector line right to the icon edge
+        // Connector to icon
         ctx.beginPath();
         ctx.strokeStyle = color;
         ctx.lineWidth = 2.5;
         ctx.globalAlpha = 0.9;
-        // Start from flow channel edge
-        const flowEndX = endPos.x - endPos.radius - 4;
-        ctx.moveTo(flowEndX, endPos.y);
-        // Connect directly to icon edge
-        ctx.lineTo(endPos.x - endPos.radius + 1, endPos.y);
+        const flowEndX = endX - iconRadius - 4;
+        ctx.moveTo(flowEndX, endY);
+        ctx.lineTo(endX - iconRadius + 2, endY);
         ctx.stroke();
         ctx.globalAlpha = 1;
         
-        // Connector dot at icon edge
+        // Connector dot
         ctx.fillStyle = color;
         ctx.beginPath();
-        ctx.arc(endPos.x - endPos.radius + 1, endPos.y, 3, 0, Math.PI * 2);
+        ctx.arc(endX - iconRadius + 2, endY, 3.5, 0, Math.PI * 2);
         ctx.fill();
       });
 
-      // VIDEO source node - LARGER than output nodes
+      // VIDEO source node - larger
+      const videoRadius = isMobile ? 30 : 28;
       const pulseRadius = videoRadius + 4 + Math.sin(time * 2) * 2;
       
       ctx.globalAlpha = 0.25;
@@ -211,7 +219,7 @@ export function ContentFlowVisualization() {
 
       ctx.fillStyle = '#8B5CF650';
       ctx.beginPath();
-      ctx.arc(startX, startY, videoRadius - 6, 0, Math.PI * 2);
+      ctx.arc(startX, startY, videoRadius - 7, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = '#F5F0EB';
@@ -231,57 +239,63 @@ export function ContentFlowVisualization() {
     };
   }, [isMobile]);
 
+  // Calculate positions for DOM nodes (same formula as canvas)
+  const getNodeStyle = (i: number): React.CSSProperties => {
+    const height = isMobile ? 600 : 450; // Match container height
+    const positions = calculateNodePositions(height);
+    const pos = positions[i];
+    
+    return {
+      position: 'absolute',
+      right: isMobile ? '8%' : '8%',
+      top: `${pos.y}px`,
+      transform: 'translateY(-50%)',
+    };
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 1, delay: 0.6 }}
-      className="mt-12 relative w-full overflow-hidden"
+      className="mt-12 relative w-full"
     >
+      {/* TALLER container for more vertical space */}
       <div 
         className="relative w-full"
-        style={{ height: isMobile ? '520px' : '380px' }}
+        style={{ height: isMobile ? '600px' : '450px' }}
       >
         <canvas
           ref={canvasRef}
           className="absolute inset-0 w-full h-full block"
         />
 
-        {/* Output nodes - LARGER icons */}
+        {/* Output nodes - perfectly aligned with canvas flows */}
         {outputNodes.map((node, i) => {
           const Icon = node.icon;
-          const total = outputNodes.length;
-          const availableHeight = isMobile ? 520 * 0.82 : 380 * 0.82;
-          const topMargin = isMobile ? 520 * 0.09 : 380 * 0.09;
-          const spacing = availableHeight / (total - 1);
-          const top = topMargin + i * spacing;
           
           return (
             <motion.div
               key={node.id}
-              className="absolute flex items-center gap-2"
-              style={{ 
-                right: isMobile ? '4%' : '3%',
-                top: `${top}px`,
-                transform: 'translateY(-50%)',
-              }}
-              initial={{ opacity: 0, x: 10 }}
+              className="flex items-center gap-3"
+              style={getNodeStyle(i)}
+              initial={{ opacity: 0, x: 15 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.4, delay: 0.9 + i * 0.03 }}
             >
-              {/* Larger icon container - w-9 h-9 instead of w-7 h-7 */}
+              {/* Larger icon */}
               <div 
-                className="flex items-center justify-center w-9 h-9 rounded-full flex-shrink-0"
+                className="flex items-center justify-center w-10 h-10 rounded-full flex-shrink-0"
                 style={{ 
                   backgroundColor: 'hsl(220 18% 10%)',
                   border: `2px solid ${node.color}`,
                   boxShadow: `0 0 15px ${node.color}60`,
                 }}
               >
-                <Icon size={18} color={node.color} strokeWidth={1.5} />
+                <Icon size={20} color={node.color} strokeWidth={1.5} />
               </div>
               <span 
-                className="text-xs font-medium whitespace-nowrap"
+                className="text-sm font-medium whitespace-nowrap"
                 style={{ color: '#F5F0EB' }}
               >
                 {node.label}
